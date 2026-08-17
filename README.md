@@ -87,12 +87,7 @@ an execution on 17 August 2026 writes
 data/result/df_baseline_result_20260817.csv
 ```
 
-The result preserves the input columns and adds:
-
-- `lac_cluster`;
-- `lac_distance`;
-- one `lac_weight_feature_*` column per feature;
-- `tsne_1` and `tsne_2`.
+The result preserves the input columns and adds the row-level outputs `lac_cluster`, `lac_distance`, `tsne_1`, and `tsne_2`. The cluster-level LAC feature weights remain available through `LAC.feature_weights_` and are not duplicated on every CSV row.
 
 All model features are standardized once inside the shared workflow before either algorithm is executed, so the two methods receive the same numerical input representation.
 
