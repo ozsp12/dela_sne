@@ -55,34 +55,31 @@ def _standardize(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
 def _write_result(
     source_rows: list[dict[str, str]],
-    feature_names: list[str],
     lac: LAC,
     embedding: np.ndarray,
     output_path: Path,
 ) -> None:
+    """Write observation-level outputs.
+
+    LAC feature weights are cluster-level parameters and remain available through
+    ``LAC.feature_weights_`` rather than being duplicated on every CSV row.
+    """
     output_path.parent.mkdir(parents=True, exist_ok=True)
     original_fields = list(source_rows[0].keys())
-    weight_fields = [f"lac_weight_{name}" for name in feature_names]
-    result_fields = (
-        original_fields
-        + ["lac_cluster", "lac_distance"]
-        + weight_fields
-        + [f"tsne_{i + 1}" for i in range(embedding.shape[1])]
-    )
+    result_fields = original_fields + ["lac_cluster", "lac_distance"] + [
+        f"tsne_{i + 1}" for i in range(embedding.shape[1])
+    ]
 
     with output_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=result_fields)
         writer.writeheader()
 
         for index, source in enumerate(source_rows):
-            label = int(lac.labels_[index])
             result = dict(source)
-            result["lac_cluster"] = label
-            result["lac_distance"] = f"{lac.distance_to_assigned_[index]:.12g}"
-            for j, field in enumerate(weight_fields):
-                result[field] = f"{lac.feature_weights_[label, j]:.12g}"
+            result["lac_cluster"] = int(lac.labels_[index])
+            result["lac_distance"] = f"{lac.distance_to_assigned_[index]:.8g}"
             for j in range(embedding.shape[1]):
-                result[f"tsne_{j + 1}"] = f"{embedding[index, j]:.12g}"
+                result[f"tsne_{j + 1}"] = f"{embedding[index, j]:.8g}"
             writer.writerow(result)
 
 
@@ -95,7 +92,7 @@ def run_dataset(
     perplexity: float = 30.0,
     random_state: int = 42,
 ) -> Path:
-    rows, feature_names, X = _read_csv(input_path)
+    rows, _, X = _read_csv(input_path)
     X_scaled, _, _ = _standardize(X)
 
     lac = LAC(
@@ -104,7 +101,9 @@ def run_dataset(
         random_state=random_state,
     ).fit(X_scaled)
 
-    effective_perplexity = min(float(perplexity), max(2.0, (len(X_scaled) - 1) / 3.0))
+    effective_perplexity = min(
+        float(perplexity), max(2.0, (len(X_scaled) - 1) / 3.0)
+    )
     tsne = TSNE(
         perplexity=effective_perplexity,
         random_state=random_state,
@@ -113,7 +112,7 @@ def run_dataset(
 
     stamp = date_stamp or datetime.now().strftime("%Y%m%d")
     output_path = output_dir / f"{input_path.stem}_result_{stamp}.csv"
-    _write_result(rows, feature_names, lac, embedding, output_path)
+    _write_result(rows, lac, embedding, output_path)
 
     print(
         f"{input_path.name} -> {output_path.name} | "
