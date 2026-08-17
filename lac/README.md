@@ -53,7 +53,7 @@ LAC is normally executed through the repository-level workflow:
 python run_workflow.py data/test/df_baseline.csv
 ```
 
-Its row-level outputs are written into the common result CSV as `lac_cluster`, `lac_distance`, and `lac_weight_feature_*` columns. The result filename follows `<test_stem>_result_YYYYMMDD.csv`.
+Its observation-level outputs are written into the common result CSV as `lac_cluster` and `lac_distance`. The cluster-level feature-weight matrix is available as `model.feature_weights_`; it is intentionally not repeated on every result row. The result filename follows `<test_stem>_result_YYYYMMDD.csv`.
 
 ## Reference
 
