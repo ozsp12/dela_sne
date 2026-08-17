@@ -1,23 +1,62 @@
 # Locally Adaptive Clustering (LAC)
 
-This directory contains the LAC component of the DELA-SNE project: documentation, the planned reproducible example, and its generated artifacts.
+This module contains the project reference implementation of **Locally Adaptive Clustering (LAC)**.
 
-## Structure
+## Files
 
 ```text
 lac/
+├── __init__.py
+├── lac.py
 ├── README.md
-├── docs/                  # Mathematical and methodological documentation
-│   └── README.md
-├── example.ipynb          # Planned executable example
-├── figures/               # Generated figures
-└── results/               # Optional machine-readable outputs
+└── docs/
 ```
 
-## Practical objective
+`lac.py` implements alternating hard assignment, centroid updates, cluster-dependent feature dispersions, and entropy-regularized feature weights.
 
-Demonstrate how Locally Adaptive Clustering assigns cluster-dependent relevance to features in high-dimensional data. A controlled synthetic dataset with informative and nuisance dimensions is preferred so that the learned local weights can be inspected directly.
+For cluster C_k, feature f, dispersion V_kf, and smoothing parameter h > 0, the implemented feature update is
 
-The example should report cluster assignments, learned feature weights, convergence behavior, parameter values, random seed, and a compact visualization.
+```text
+w_kf = exp(-V_kf/h) / sum_g exp(-V_kg/h).
+```
 
-See [`docs/`](docs/) for the methodological description and canonical reference.
+Assignments use the cluster-dependent weighted squared distance
+
+```text
+d_k^2(x,z_k) = sum_f w_kf (x_f-z_kf)^2.
+```
+
+## Software interface
+
+```python
+from lac import LAC
+
+model = LAC(
+    n_clusters=3,
+    h=0.5,
+    max_iter=200,
+    random_state=42,
+)
+
+labels = model.fit_predict(X)
+weights = model.feature_weights_
+centroids = model.cluster_centers_
+```
+
+The fitted object exposes `labels_`, `cluster_centers_`, `feature_weights_`, `distances_`, `distance_to_assigned_`, `n_iter_`, and `objective_`.
+
+## Shared workflow
+
+LAC is normally executed through the repository-level workflow:
+
+```bash
+python run_workflow.py data/test/df_baseline.csv
+```
+
+Its observation-level outputs are written into the common result CSV as `lac_cluster` and `lac_distance`. The cluster-level feature-weight matrix is available as `model.feature_weights_`; it is intentionally not repeated on every result row. The result filename follows `<test_stem>_result_YYYYMMDD.csv`.
+
+## Reference
+
+C. Domeniconi, D. Gunopulos, S. Ma, B. Yan, M. Al-Razgan, and D. Papadopoulos, “Locally Adaptive Metrics for Clustering High Dimensional Data,” *Data Mining and Knowledge Discovery* 14, 63–97 (2007), DOI `10.1007/s10618-006-0060-8`.
+
+See [`docs/`](docs/) for methodological documentation and [`../references/references.bib`](../references/references.bib) for the project bibliography.

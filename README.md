@@ -1,103 +1,116 @@
 # DELA-SNE
 
-Research repository for the development of **Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding (DELA-SNE)** and for reproducible comparisons with its two main methodological foundations: **Locally Adaptive Clustering (LAC)** and **t-distributed Stochastic Neighbor Embedding (t-SNE)**.
+Research repository for **Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding (DELA-SNE)** and its two algorithmic foundations: **Locally Adaptive Clustering (LAC)** and **t-distributed Stochastic Neighbor Embedding (t-SNE)**.
 
-## Scope
-
-The project studies how locally adaptive feature metrics can be incorporated into stochastic-neighbor embedding while retaining an explicit information-theoretic interpretation.
-
-A central distinction is maintained throughout the project:
-
-- **LAC** is a clustering algorithm that learns cluster-dependent feature weights.
-- **t-SNE** is a nonlinear embedding and visualization algorithm, not a clustering algorithm.
-- **DELA-SNE** is the proposed method investigated in the associated manuscript.
+The repository separates clustering, embedding, data, reproducible execution, manuscript material, and references. LAC and t-SNE are implemented as independent reference modules. DELA-SNE remains a research implementation target and is not yet frozen as software.
 
 ## Algorithms
 
-| Method | Role | Main idea | Module |
+| Method | Role | Implementation | Output |
 |---|---|---|---|
-| LAC | Methodological foundation | Locally adaptive metrics and feature weighting for high-dimensional clustering | [`lac/`](lac/) |
-| t-SNE | Methodological foundation | Probabilistic neighborhood-preserving low-dimensional embedding | [`tsne/`](tsne/) |
-| DELA-SNE | Proposed method | Locally adaptive stochastic-neighbor embedding with an entropy-based formulation | [`dela_sne/`](dela_sne/) |
+| LAC | clustering with cluster-dependent feature relevance | [`lac/lac.py`](lac/lac.py) | hard cluster, assigned weighted distance, local feature weights |
+| t-SNE | nonlinear probabilistic embedding | [`tsne/tsne.py`](tsne/tsne.py) | two-dimensional embedding |
+| DELA-SNE | proposed method | pending | pending |
 
-Each algorithm is organized as an independent top-level module containing its own README, methodological documentation, practical example, figures, and results.
-
-## Associated manuscript
-
-**Working title:** *Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding*
-
-**Status:** manuscript in preparation.
-
-The manuscript develops the connection among locally adaptive metrics, stochastic neighbor embedding, generalized distance functions, and information-theoretic quantities. Repository implementations and numerical examples are intended to reproduce the computational results presented in the paper.
-
-See [`paper/`](paper/) and the project-wide [paper documentation](docs/paper.md).
+The LAC implementation follows the entropy-regularized feature-weight update of Domeniconi et al. The t-SNE implementation is an explicit exact NumPy implementation intended for small reproducible datasets rather than large-scale workloads.
 
 ## Repository structure
 
 ```text
 dela_sne/
 ├── README.md
-├── lac/                   # LAC module
+├── run_workflow.py
+├── requirements.txt
+├── .github/
+│   └── workflows/
+│       └── algorithms.yml
+├── data/
+│   ├── test/
+│   │   └── df_baseline.csv
+│   └── result/
+│       └── df_baseline_result_YYYYMMDD.csv
+├── lac/
+│   ├── __init__.py
+│   ├── lac.py
 │   ├── README.md
 │   └── docs/
-├── tsne/                  # t-SNE module
+├── tsne/
+│   ├── __init__.py
+│   ├── tsne.py
 │   ├── README.md
 │   └── docs/
-├── dela_sne/              # Proposed DELA-SNE module
+├── dela_sne/
 │   ├── README.md
 │   └── docs/
-├── data/                  # Shared or reproducible datasets
-├── docs/                  # Project-wide documentation and GitHub Pages source
-│   ├── index.md
-│   ├── examples.md
-│   ├── paper.md
-│   └── references.md
-├── paper/                 # Manuscript-related material
-├── references/            # Bibliography and reference material
+├── paper/
+├── references/
 │   └── references.bib
-├── src/dela_sne/          # Future reusable DELA-SNE package implementation
-└── tests/                 # Tests for reusable implementation
+├── docs/
+└── tests/
 ```
 
-## Practical examples
+## Data convention
 
-Each top-level algorithm module will contain one practical example. The three examples should follow a common reproducibility standard:
+`data/test/` contains input datasets and `data/result/` contains generated algorithm outputs. Test CSV files must contain numeric feature columns named `feature_1`, `feature_2`, and so on. Other columns are preserved as metadata and are not used as model inputs.
 
-1. define or load a compact dataset;
-2. state preprocessing assumptions;
-3. execute the method with explicit parameters;
-4. visualize the result;
-5. interpret the output according to the actual role of the method;
-6. record random seeds and software versions.
+The committed baseline dataset, [`data/test/df_baseline.csv`](data/test/df_baseline.csv), is a deterministic synthetic benchmark generated with random seed 42. It contains 96 observations, eight numerical features, and three known groups. Informative dimensions differ by group, while other dimensions contain larger nuisance variation. The `true_cluster` column is retained only for validation and is excluded from algorithm inputs.
 
-Whenever possible, the same benchmark dataset or deliberately comparable synthetic datasets should be used across the three modules so that methodological differences are visible rather than confounded by dataset choice.
+## Joint workflow
 
-## References
+Run both implemented algorithms over every CSV in `data/test/`:
 
-Core references currently used by the project include:
+```bash
+python run_workflow.py
+```
 
-1. P. C. Mahalanobis, “On the generalized distance in statistics,” *Proceedings of the National Institute of Sciences of India* **2**, 49–55 (1936).
-2. C. E. Shannon, “A Mathematical Theory of Communication,” *Bell System Technical Journal* **27**, 379–423 and 623–656 (1948).
-3. E. T. Jaynes, “Information Theory and Statistical Mechanics,” *Physical Review* **106**, 620–630 (1957). DOI: 10.1103/PhysRev.106.620.
-4. E. T. Jaynes, “Information Theory and Statistical Mechanics. II,” *Physical Review* **108**, 171–190 (1957). DOI: 10.1103/PhysRev.108.171.
-5. G. E. Hinton and S. T. Roweis, “Stochastic Neighbor Embedding,” *Advances in Neural Information Processing Systems* **15** (2002).
-6. C. Domeniconi, D. Gunopulos, S. Ma, B. Yan, M. Al-Razgan, and D. Papadopoulos, “Locally adaptive metrics for clustering high dimensional data,” *Data Mining and Knowledge Discovery* **14**, 63–97 (2007). DOI: 10.1007/s10618-006-0060-8.
-7. L. van der Maaten and G. Hinton, “Visualizing Data using t-SNE,” *Journal of Machine Learning Research* **9**, 2579–2605 (2008).
-8. A. Rényi, “On Measures of Entropy and Information,” in *Proceedings of the Fourth Berkeley Symposium on Mathematical Statistics and Probability*, Vol. 1, 547–561 (1961).
-9. C. Tsallis, “Possible generalization of Boltzmann-Gibbs statistics,” *Journal of Statistical Physics* **52**, 479–487 (1988). DOI: 10.1007/BF01016429.
+Run a specific file:
 
-The machine-readable bibliography is maintained in [`references/references.bib`](references/references.bib).
+```bash
+python run_workflow.py data/test/df_baseline.csv
+```
+
+Relevant parameters can be controlled from the command line:
+
+```bash
+python run_workflow.py --clusters 3 --h 0.5 --perplexity 30 --seed 42
+```
+
+For an input named
+
+```text
+data/test/df_baseline.csv
+```
+
+an execution on 17 August 2026 writes
+
+```text
+data/result/df_baseline_result_20260817.csv
+```
+
+The result preserves the input columns and adds the row-level outputs `lac_cluster`, `lac_distance`, `tsne_1`, and `tsne_2`. The cluster-level LAC feature weights remain available through `LAC.feature_weights_` and are not duplicated on every CSV row.
+
+All model features are standardized once inside the shared workflow before either algorithm is executed, so the two methods receive the same numerical input representation.
+
+## GitHub Actions
+
+[`.github/workflows/algorithms.yml`](.github/workflows/algorithms.yml) provides the joint CI workflow. It installs the project dependency, runs unit/smoke tests, executes LAC and t-SNE on the committed test datasets, and uploads the generated `data/result/*.csv` files as a workflow artifact.
+
+## Reproducibility
+
+The reference workflow uses fixed seeds by default. Exact t-SNE is quadratic in the number of observations and is deliberately used here because the baseline is small and the implementation is intended to remain mathematically inspectable. Large datasets should use an accelerated implementation rather than this reference code.
+
+## Associated manuscript
+
+The repository accompanies the manuscript on the statistical-mechanical interpretation of LAC and SNE/t-SNE and the subsequent DELA-SNE construction. Manuscript-related material is maintained under [`paper/`](paper/).
+
+The canonical machine-readable bibliography is [`references/references.bib`](references/references.bib). It is synchronized with the current manuscript reference list.
 
 ## Documentation
 
-Algorithm-specific documentation is colocated with each module:
+Algorithm-specific documentation is colocated with each algorithm:
 
 - [`lac/docs/`](lac/docs/)
 - [`tsne/docs/`](tsne/docs/)
 - [`dela_sne/docs/`](dela_sne/docs/)
 
-The root [`docs/`](docs/) directory is reserved for project-wide material such as the landing page, manuscript overview, shared examples, and bibliography.
-
-## Development status
-
-The repository is currently in the research and prototyping phase. The mathematical definitions in the manuscript remain the source of truth for DELA-SNE until the algorithmic specification is frozen.
+Project-wide documentation remains under [`docs/`](docs/).
