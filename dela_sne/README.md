@@ -1,23 +1,27 @@
 # Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding (DELA-SNE)
 
-This directory contains the proposed DELA-SNE method: documentation, the future implementation, the planned reproducible example, and its validation artifacts.
+This module is reserved for the proposed DELA-SNE method.
 
-## Structure
+## Current status
+
+The software implementation is intentionally **not yet added**. The repository currently implements only the two source algorithms used as baselines:
+
+- [`../lac/`](../lac/) — Locally Adaptive Clustering;
+- [`../tsne/`](../tsne/) — t-distributed Stochastic Neighbor Embedding.
+
+DELA-SNE will be implemented after its mathematical specification and evaluation protocol are frozen. This avoids allowing an experimental code path to become the de facto definition of the method.
+
+## Planned integration
+
+The future implementation will use the same repository conventions:
 
 ```text
 dela_sne/
 ├── README.md
-├── docs/                  # Mathematical and methodological documentation
-│   └── README.md
-├── example.ipynb          # Planned executable example
-├── figures/               # Generated figures
-└── results/               # Optional machine-readable outputs
+├── docs/
+└── dela_sne.py            # future
 ```
 
-## Practical objective
+It will consume datasets from `../data/test/`, participate in the shared workflow, and append its outputs to the corresponding dated file in `../data/result/`.
 
-Demonstrate the proposed locally adaptive stochastic-neighbor embedding after the mathematical specification is frozen in the manuscript. The example should reuse the benchmark data and preprocessing adopted for the LAC and t-SNE modules whenever possible.
-
-The implementation and notebook must expose the locally adaptive metric quantities explicitly and keep embedding evaluation separate from clustering evaluation.
-
-See [`docs/`](docs/) for the current methodological description and [`../paper/`](../paper/) for manuscript-related material.
+See [`docs/`](docs/) for the current methodological description and [`../paper/`](../paper/) for manuscript material.
