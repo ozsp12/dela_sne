@@ -53,7 +53,7 @@ dela_sne/
 
 `data/test/` contains input datasets and `data/result/` contains generated algorithm outputs. Test CSV files must contain numeric feature columns named `feature_1`, `feature_2`, and so on. Other columns are preserved as metadata and are not used as model inputs.
 
-The committed baseline dataset, [`data/test/df_baseline.csv`](data/test/df_baseline.csv), is a deterministic synthetic benchmark generated with random seed 42. It contains 240 observations, eight numerical features, and three known groups. Informative dimensions differ by group, while other dimensions contain larger nuisance variation. The `true_cluster` column is retained only for validation and is excluded from algorithm inputs.
+The committed baseline dataset, [`data/test/df_baseline.csv`](data/test/df_baseline.csv), is a deterministic synthetic benchmark generated with random seed 42. It contains 96 observations, eight numerical features, and three known groups. Informative dimensions differ by group, while other dimensions contain larger nuisance variation. The `true_cluster` column is retained only for validation and is excluded from algorithm inputs.
 
 ## Joint workflow
 
