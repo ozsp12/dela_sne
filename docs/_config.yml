@@ -1,0 +1,5 @@
+title: DELA-SNE
+description: Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding
+repository: ozsp12/dela_sne
+theme: jekyll-theme-minimal
+markdown: kramdown
