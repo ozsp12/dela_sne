@@ -1,5 +1,5 @@
-from pathlib import Path
 import csv
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -7,7 +7,6 @@ from sklearn.metrics import adjusted_rand_score
 from sklearn.preprocessing import StandardScaler
 
 from dela_sne import LAC
-
 
 ROOT = Path(__file__).resolve().parents[1]
 
