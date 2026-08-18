@@ -6,16 +6,18 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          persist-credentials: false
+          ref: agent/scientific-revision-schottky
+          fetch-depth: 0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.12"
@@ -27,6 +29,29 @@ jobs:
           python -m pip install -e . --no-deps
       - name: Run full paper experiment suite
         run: python paper/experiments/run_experiments.py
+      - name: Apply scientific manuscript revision
+        run: python scripts/apply_scientific_revision.py
+      - name: Verify synchronized bibliography
+        run: python scripts/sync_bibliography.py --check
+      - name: Compile revised manuscript
+        uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b
+        with:
+          root_file: main.tex
+          working_directory: paper
+      - name: Commit generated scientific revision
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/main.tex paper/references.bib references/references.bib \
+            paper/experiments/README.md paper/experiments/MANIFEST.txt \
+            paper/experiments/assets paper/figures
+          git commit -m "Apply scientific response revision" || exit 0
+          git push origin HEAD:agent/scientific-revision-schottky
+      - name: Upload revised manuscript
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: revised-manuscript
+          path: paper/main.pdf
       - name: Upload revision CSVs
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -36,16 +61,3 @@ jobs:
             paper/experiments/assets/lac_unsupervised_baselines.csv
             paper/experiments/assets/lac_stress_tests.csv
             paper/experiments/assets/sne_perplexity_validation.csv
-      - name: Upload revision figures
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: scientific-revision-figures
-          path: |
-            paper/figures/lac_schottky_validation.pdf
-            paper/figures/lac_selector_baselines.pdf
-            paper/figures/lac_stress_tests.pdf
-            paper/figures/sne_perplexity_validation.pdf
-            paper/experiments/assets/source_images/lac_schottky_validation.png
-            paper/experiments/assets/source_images/lac_selector_baselines.png
-            paper/experiments/assets/source_images/lac_stress_tests.png
-            paper/experiments/assets/source_images/sne_perplexity_validation.png
