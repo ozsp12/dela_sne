@@ -7,8 +7,8 @@ experiments through a single implementation.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 
@@ -123,18 +123,6 @@ class LAC:
         if self.tol < 0:
             raise ValueError("tol must be non-negative.")
 
-    @staticmethod
-    def _initialize_centroids(X: np.ndarray, seed: int) -> np.ndarray:
-        """k-means++ style initialization without an external dependency."""
-        n = len(X)
-        rng = np.random.default_rng(seed)
-        centroids = [X[int(rng.integers(n))].copy()]
-        closest_sq = np.sum((X - centroids[0]) ** 2, axis=1)
-
-        while len(centroids) < 1:
-            pass
-        return np.asarray(centroids)
-
     def _kmeanspp_centroids(self, X: np.ndarray, seed: int) -> np.ndarray:
         n = len(X)
         rng = np.random.default_rng(seed)
@@ -206,12 +194,19 @@ class LAC:
                     new_centroids[k] = np.mean(members, axis=0)
                     V[k] = np.mean((members - new_centroids[k]) ** 2, axis=0)
 
-            h_value = self.h if temperature_rule is None else temperature_rule(V.copy(), iteration)
+            h_value = (
+                self.h
+                if temperature_rule is None
+                else temperature_rule(V.copy(), iteration)
+            )
             h_current = np.asarray(h_value, dtype=float)
             if h_current.ndim == 0:
                 h_current = np.full(self.n_clusters, float(h_current))
             if h_current.shape != (self.n_clusters,) or np.any(h_current <= 0):
-                raise ValueError("temperature_rule must return positive scalar or length n_clusters.")
+                raise ValueError(
+                    "temperature_rule must return a positive scalar or "
+                    "length n_clusters."
+                )
 
             if np.any(nonempty):
                 new_weights[nonempty] = softmax_feature_weights(
@@ -222,9 +217,14 @@ class LAC:
                 nearest = np.min(distances, axis=1)
                 order = np.argsort(nearest)[::-1]
                 for k in np.where(~nonempty)[0]:
-                    idx = next((int(i) for i in order if int(i) not in used_reseeds), None)
+                    idx = next(
+                        (int(i) for i in order if int(i) not in used_reseeds),
+                        None,
+                    )
                     if idx is None:
-                        raise RuntimeError("Unable to choose a unique empty-cluster reseed.")
+                        raise RuntimeError(
+                            "Unable to choose a unique empty-cluster reseed."
+                        )
                     used_reseeds.add(idx)
                     new_centroids[k] = X[idx]
                     new_weights[k] = 1.0 / d
@@ -270,7 +270,7 @@ class LAC:
         *,
         initial_labels: np.ndarray | None = None,
         temperature_rule: TemperatureRule | None = None,
-    ) -> "LAC":
+    ) -> LAC:
         X = validate_array(X)
         self._validate_parameters(len(X))
         if initial_labels is not None and self.n_init != 1:
@@ -296,7 +296,9 @@ class LAC:
         self.distance_term_ = float(best["distance_term"])
         self.entropy_term_ = float(best["entropy_term"])
         self.objective_ = float(best["objective"])
-        self.restart_objectives_ = np.asarray([run["objective"] for run in runs], dtype=float)
+        self.restart_objectives_ = np.asarray(
+            [run["objective"] for run in runs], dtype=float
+        )
         return self
 
     def fit_predict(self, X: np.ndarray, **kwargs: object) -> np.ndarray:
