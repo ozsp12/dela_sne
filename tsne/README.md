@@ -39,7 +39,7 @@ The implementation remains O(n^2) in time/storage for pairwise probability matri
 ## Shared workflow
 
 ```bash
-python run_workflow.py data/test/df_baseline.csv
+dela-sne-run data/test/df_baseline.csv
 ```
 
 The coordinates are appended to the stable output `data/result/df_baseline_result.csv` as `tsne_1` and `tsne_2`.
