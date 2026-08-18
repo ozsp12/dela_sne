@@ -3,7 +3,7 @@ from pathlib import Path
 
 import numpy as np
 
-from run_workflow import run_dataset
+from dela_sne.workflow import run_dataset
 
 
 def test_workflow_uses_stable_result_name(tmp_path: Path) -> None:
