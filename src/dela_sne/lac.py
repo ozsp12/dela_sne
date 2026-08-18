@@ -9,11 +9,27 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TypedDict
 
 import numpy as np
 
 EPS = 1e-12
 TemperatureRule = Callable[[np.ndarray, int], float | np.ndarray]
+
+
+class _LACRun(TypedDict):
+    cluster_centers: np.ndarray
+    feature_weights: np.ndarray
+    labels: np.ndarray
+    distances: np.ndarray
+    distance_to_assigned: np.ndarray
+    n_iter: int
+    status: str
+    cycle_period: int
+    h: np.ndarray
+    distance_term: float
+    entropy_term: float
+    objective: float
 
 
 def validate_array(X: np.ndarray) -> np.ndarray:
@@ -155,7 +171,7 @@ class LAC:
         seed: int,
         initial_labels: np.ndarray | None,
         temperature_rule: TemperatureRule | None,
-    ) -> dict[str, object]:
+    ) -> _LACRun:
         n, d = X.shape
         if initial_labels is None:
             centroids = self._kmeanspp_centroids(X, seed)
@@ -282,24 +298,35 @@ class LAC:
             self._fit_single(X, int(seed), initial_labels, temperature_rule)
             for seed in seeds
         ]
-        best = min(runs, key=lambda run: float(run["objective"]))
+        best = min(runs, key=lambda run: run["objective"])
 
-        self.cluster_centers_ = np.asarray(best["cluster_centers"])
-        self.feature_weights_ = np.asarray(best["feature_weights"])
-        self.labels_ = np.asarray(best["labels"])
-        self.distances_ = np.asarray(best["distances"])
-        self.distance_to_assigned_ = np.asarray(best["distance_to_assigned"])
-        self.n_iter_ = int(best["n_iter"])
-        self.status_ = str(best["status"])
-        self.cycle_period_ = int(best["cycle_period"])
-        self.h_ = np.asarray(best["h"])
-        self.distance_term_ = float(best["distance_term"])
-        self.entropy_term_ = float(best["entropy_term"])
-        self.objective_ = float(best["objective"])
+        self.cluster_centers_ = best["cluster_centers"].copy()
+        self.feature_weights_ = best["feature_weights"].copy()
+        self.labels_ = best["labels"].copy()
+        self.distances_ = best["distances"].copy()
+        self.distance_to_assigned_ = best["distance_to_assigned"].copy()
+        self.n_iter_ = best["n_iter"]
+        self.status_ = best["status"]
+        self.cycle_period_ = best["cycle_period"]
+        self.h_ = best["h"].copy()
+        self.distance_term_ = best["distance_term"]
+        self.entropy_term_ = best["entropy_term"]
+        self.objective_ = best["objective"]
         self.restart_objectives_ = np.asarray(
             [run["objective"] for run in runs], dtype=float
         )
         return self
 
-    def fit_predict(self, X: np.ndarray, **kwargs: object) -> np.ndarray:
-        return self.fit(X, **kwargs).labels_.copy()
+    def fit_predict(
+        self,
+        X: np.ndarray,
+        *,
+        initial_labels: np.ndarray | None = None,
+        temperature_rule: TemperatureRule | None = None,
+    ) -> np.ndarray:
+        fitted = self.fit(
+            X,
+            initial_labels=initial_labels,
+            temperature_rule=temperature_rule,
+        )
+        return fitted.labels_.copy()
