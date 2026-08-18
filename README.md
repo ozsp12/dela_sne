@@ -29,6 +29,8 @@ The package can then be imported independently of the current working directory:
 from dela_sne import LAC, TSNE
 ```
 
+The shared algorithm workflow is installed as the command `dela-sne-run`.
+
 ## Repository structure
 
 ```text
@@ -38,8 +40,7 @@ dela_sne/
 ├── LICENSE
 ├── CITATION.cff
 ├── CHANGELOG.md
-├── run_workflow.py
-├── src/dela_sne/           # canonical executable package
+├── src/dela_sne/           # canonical executable package and workflow
 ├── lac/                    # LAC documentation
 ├── tsne/                   # t-SNE documentation
 ├── data/
@@ -79,13 +80,13 @@ The implementation is intended as an inspectable reference for small datasets, n
 Run all CSV files in `data/test/`:
 
 ```bash
-python run_workflow.py
+dela-sne-run
 ```
 
 Or run one file:
 
 ```bash
-python run_workflow.py data/test/df_baseline.csv
+dela-sne-run data/test/df_baseline.csv
 ```
 
 Outputs use stable names. For example:
@@ -107,7 +108,7 @@ The manuscript experiment entrypoint is:
 python paper/experiments/run_experiments.py
 ```
 
-The entrypoint binds its LAC operations to the installed canonical package before executing the paper-specific datasets, temperature rules, diagnostics, and plots. Thus the article does not maintain an independent LAC update implementation.
+The entrypoint binds its LAC operations to the installed canonical package before executing the paper-specific datasets, temperature rules, diagnostics, and plots. Thus the article does not maintain an independent runtime LAC implementation.
 
 [`references/references.bib`](references/references.bib) is the canonical bibliography. [`paper/references.bib`](paper/references.bib) is a synchronized copy so the `paper/` tree remains self-contained:
 
