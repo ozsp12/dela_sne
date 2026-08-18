@@ -1,101 +1,155 @@
 # DELA-SNE
 
-Research repository for **Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding (DELA-SNE)** and its two algorithmic foundations: **Locally Adaptive Clustering (LAC)** and **t-distributed Stochastic Neighbor Embedding (t-SNE)**.
+Research software repository for the **Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding (DELA-SNE)** research program and its two reference foundations: **Locally Adaptive Clustering (LAC)** and **t-distributed Stochastic Neighbor Embedding (t-SNE)**.
 
-The repository separates reference algorithms, reusable data workflows, and a self-contained manuscript tree. LAC and t-SNE are implemented as independent reference modules. DELA-SNE remains a research implementation target and is not yet frozen as software.
+The executable reference code has one canonical location: [`src/dela_sne/`](src/dela_sne/). The top-level [`lac/`](lac/) and [`tsne/`](tsne/) directories contain method-specific documentation, while [`paper/`](paper/) contains the current self-contained manuscript and its experiment layer.
 
-## Algorithms
+## Status
 
-| Method | Role | Implementation | Output |
-|---|---|---|---|
-| LAC | clustering with cluster-dependent feature relevance | [`lac/lac.py`](lac/lac.py) | hard cluster, assigned weighted distance, local feature weights |
-| t-SNE | nonlinear probabilistic embedding | [`tsne/tsne.py`](tsne/tsne.py) | two-dimensional embedding |
-| DELA-SNE | proposed method | pending | pending |
+| Method | Status | Canonical code |
+|---|---|---|
+| LAC | implemented and tested | [`src/dela_sne/lac.py`](src/dela_sne/lac.py) |
+| t-SNE | implemented and tested | [`src/dela_sne/tsne.py`](src/dela_sne/tsne.py) |
+| DELA-SNE | mathematical specification in progress | [freeze checklist](docs/dela_sne.md) |
+
+DELA-SNE is intentionally not exposed as a stable class until the metric, entropy coupling, symmetrization, objective, gradient, initialization, stopping rules, and validation protocol satisfy the explicit freeze checklist.
+
+## Current manuscript
+
+The manuscript currently reproduced by this repository is:
+
+*Feature and Neighbor Ensembles in Locally Adaptive Clustering and Stochastic Neighbor Embedding: Response Functions and Perplexity Tolerance*.
+
+It studies response diagnostics, feature and neighbor ensembles, temperature selection, perplexity tolerance, deterministic annealing, and numerical validation. It is a foundational article within the wider DELA-SNE project; it does **not** claim to define the final DELA-SNE algorithm. See [`docs/paper.md`](docs/paper.md) for the project/manuscript boundary.
+
+## Installation
+
+For a reproducible development environment:
+
+```bash
+python -m pip install -r requirements.lock
+python -m pip install -e . --no-deps
+```
+
+The package can then be imported independently of the current working directory:
+
+```python
+from dela_sne import LAC, TSNE
+```
+
+The shared algorithm workflow is installed as the command `dela-sne-run`.
 
 ## Repository structure
 
 ```text
 dela_sne/
-├── README.md
-├── run_workflow.py
-├── requirements.txt
-├── .github/
-│   └── workflows/
-│       └── algorithms.yml
+├── pyproject.toml
+├── requirements.lock
+├── LICENSE
+├── CITATION.cff
+├── CHANGELOG.md
+├── src/dela_sne/           # canonical executable package and workflow
+├── lac/                    # LAC documentation
+├── tsne/                   # t-SNE documentation
 ├── data/
-│   ├── test/
-│   └── result/
-├── lac/
-├── tsne/
-├── dela_sne/
-├── paper/
-│   ├── main.tex
-│   ├── references.bib
-│   ├── figures/
-│   │   └── *.pdf
-│   └── experiments/
-│       ├── run_experiments.py
-│       ├── requirements.txt
-│       ├── README.md
-│       ├── MANIFEST.txt
-│       └── assets/
-│           ├── source_images/
-│           │   └── *.png
-│           └── *.csv
+│   ├── schema.json         # machine-readable workflow row schema
+│   ├── test/               # versioned deterministic inputs
+│   └── result/             # generated stable-name outputs
+├── paper/                  # current manuscript and numerical experiment layer
 ├── references/
-├── docs/
-└── tests/
+│   └── references.bib      # canonical bibliography
+├── scripts/                # reproducibility checks
+├── tests/                  # numerical and workflow tests
+└── .github/workflows/      # CI
 ```
 
-## Data convention
+## LAC
 
-`data/test/` contains input datasets and `data/result/` contains generated algorithm outputs. Test CSV files must contain numeric feature columns named `feature_1`, `feature_2`, and so on. Other columns are preserved as metadata and are not used as model inputs.
+The canonical LAC implementation includes cluster-dependent feature weights, a complete entropy-regularized objective, multiple restarts, deterministic seeding, cycle diagnostics, validation of stopping parameters, and unique reseeding for multiple empty clusters.
 
-The committed baseline dataset, [`data/test/df_baseline.csv`](data/test/df_baseline.csv), is a deterministic synthetic benchmark generated with random seed 42. It contains 96 observations, eight numerical features, and three known groups. Informative dimensions differ by group, while other dimensions contain larger nuisance variation. The `true_cluster` column is retained only for validation and is excluded from algorithm inputs.
+The fitted object exposes, among other quantities:
 
-## Joint algorithm workflow
+- `labels_` and `cluster_centers_`;
+- `feature_weights_`;
+- `distance_term_`;
+- `entropy_term_`;
+- `objective_ = distance_term_ + entropy_term_`;
+- `status_`, `cycle_period_`, and `restart_objectives_`.
 
-Run both implemented reference algorithms over every CSV in `data/test/`:
+The temperature `h` has the dimension of a feature variance. It is therefore not invariant to rescaling of the input features. The shared workflow standardizes features before LAC and t-SNE are run.
+
+## t-SNE
+
+The exact NumPy reference implementation retains the O(n^2) probability matrices for transparency. It supports PCA or random initialization, adaptive gains, a sample-size-aware `learning_rate="auto"`, early exaggeration, momentum, and stopping by gradient norm. The analytic KL gradient is tested against finite differences.
+
+The implementation is intended as an inspectable reference for small datasets, not as a replacement for Barnes-Hut or FFT-accelerated production implementations.
+
+## Shared data workflow
+
+Run all CSV files in `data/test/`:
 
 ```bash
-python run_workflow.py
+dela-sne-run
 ```
 
-For an input such as `data/test/df_baseline.csv`, outputs are written under `data/result/` with the execution date in the result file name.
-
-## Manuscript and paper experiments
-
-[`paper/`](paper/) is self-contained. It contains the current LaTeX source, its bibliography, final PDF figures, the complete experiment driver, numerical CSV outputs, and PNG companion/source exports.
-
-Regenerate the paper experiment assets with:
+Or run one file:
 
 ```bash
-python -m pip install -r paper/experiments/requirements.txt
+dela-sne-run data/test/df_baseline.csv
+```
+
+Input feature columns follow the `feature_1`, `feature_2`, ... convention. Additional columns are preserved as metadata and excluded from model input. The row contract is declared in the machine-readable [`data/schema.json`](data/schema.json).
+
+Outputs use stable names. For example:
+
+```text
+data/test/df_baseline.csv
+        -> data/result/df_baseline_result.csv
+```
+
+Git records historical changes; timestamps are not encoded in filenames. Generated result CSVs are ignored by default and are uploaded by CI as artifacts. CSV outputs use explicit LF line endings for platform-stable regeneration.
+
+The baseline dataset contains eight numeric feature columns and a `true_cluster` validation label that is excluded from model input.
+
+## Manuscript reproducibility
+
+The manuscript experiment entrypoint is:
+
+```bash
 python paper/experiments/run_experiments.py
 ```
 
-The experiment uses stable file names and overwrites the current assets. Historical versions are provided by Git rather than timestamped duplicate files.
+The entrypoint binds its LAC operations to the installed canonical package before executing the paper-specific datasets, temperature rules, diagnostics, and plots. Thus the article does not maintain an independent runtime LAC implementation.
 
-Compile the manuscript from `paper/` with:
+[`references/references.bib`](references/references.bib) is the canonical bibliography. [`paper/references.bib`](paper/references.bib) is a synchronized copy so the `paper/` tree remains self-contained:
 
 ```bash
-latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+python scripts/sync_bibliography.py --check
 ```
 
-## GitHub Actions
+Numerical paper assets are checked with floating-point tolerances. Figure files are regenerated and checked for existence rather than compared byte-for-byte, because renderer metadata and font metrics are not a scientifically meaningful equality criterion.
 
-[`.github/workflows/algorithms.yml`](.github/workflows/algorithms.yml) is the repository CI workflow. It runs unit tests and the joint LAC/t-SNE workflow, executes the complete paper experiment, verifies that all expected manuscript figures and numerical assets are generated, checks that committed paper assets are reproducible, compiles `paper/main.tex`, and uploads the algorithm results, paper assets, and compiled manuscript as workflow artifacts.
+## Continuous integration
 
-## Reproducibility
+CI runs Python 3.11 and 3.12 quality jobs with:
 
-The reference algorithm workflow and the paper experiment use fixed seeds. The paper experiment stores numerical outputs in `paper/experiments/assets/`, PNG companion exports in `paper/experiments/assets/source_images/`, and final vector figures in `paper/figures/`. The LaTeX source references only files inside `paper/`, so that directory can be archived or compiled independently after installing the documented dependencies.
+- Ruff static analysis;
+- mypy type checking;
+- pytest with coverage;
+- deterministic/numerical LAC tests;
+- deterministic and finite-difference t-SNE tests;
+- workflow contract tests.
 
-## Documentation
+Separate jobs execute the shared data workflow and reproduce/compile the manuscript. The workflow has `contents: read`; it does not push generated PDFs back to the repository. Concurrency cancellation prevents obsolete runs from consuming resources, and each job has an explicit timeout. Result datasets, experiment assets, and the compiled manuscript are published as CI artifacts.
 
-Algorithm-specific documentation is colocated with each algorithm:
+## References and redistribution
 
-- [`lac/docs/`](lac/docs/)
-- [`tsne/docs/`](tsne/docs/)
-- [`dela_sne/docs/`](dela_sne/docs/)
+The public repository stores bibliographic metadata rather than publisher PDFs. See [`references/README.md`](references/README.md).
 
-Project-wide documentation remains under [`docs/`](docs/).
+## Citation and releases
+
+Software citation metadata are provided in [`CITATION.cff`](CITATION.cff). The manuscript should cite an immutable tagged and archived release, not `main`. A release checklist is maintained in [`docs/RELEASING.md`](docs/RELEASING.md); a Zenodo DOI must be added only after an actual archive has been created.
+
+## License
+
+The software is released under the [MIT License](LICENSE). Third-party papers, datasets, and other external materials retain their own licenses.

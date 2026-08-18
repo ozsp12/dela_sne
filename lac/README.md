@@ -1,62 +1,57 @@
 # Locally Adaptive Clustering (LAC)
 
-This module contains the project reference implementation of **Locally Adaptive Clustering (LAC)**.
+This directory contains method-specific documentation for Locally Adaptive Clustering. The executable implementation is canonicalized at [`../src/dela_sne/lac.py`](../src/dela_sne/lac.py); there is no second LAC implementation in this directory.
 
-## Files
+The implemented local weighted squared distance is
 
 ```text
-lac/
-├── __init__.py
-├── lac.py
-├── README.md
-└── docs/
+d_k^2(x,z_k) = sum_f w_kf (x_f-z_kf)^2,
 ```
 
-`lac.py` implements alternating hard assignment, centroid updates, cluster-dependent feature dispersions, and entropy-regularized feature weights.
-
-For cluster C_k, feature f, dispersion V_kf, and smoothing parameter h > 0, the implemented feature update is
+with entropy-regularized feature weights
 
 ```text
 w_kf = exp(-V_kf/h) / sum_g exp(-V_kg/h).
 ```
 
-Assignments use the cluster-dependent weighted squared distance
-
-```text
-d_k^2(x,z_k) = sum_f w_kf (x_f-z_kf)^2.
-```
+Here `V_kf` is a cluster-dependent feature dispersion. The temperature `h` has units of variance, so comparisons across values of `h` require a defined feature scale.
 
 ## Software interface
 
 ```python
-from lac import LAC
+from dela_sne import LAC
 
 model = LAC(
     n_clusters=3,
-    h=0.5,
+    h=0.2,
+    n_init=10,
     max_iter=200,
     random_state=42,
-)
-
-labels = model.fit_predict(X)
-weights = model.feature_weights_
-centroids = model.cluster_centers_
+).fit(X)
 ```
 
-The fitted object exposes `labels_`, `cluster_centers_`, `feature_weights_`, `distances_`, `distance_to_assigned_`, `n_iter_`, and `objective_`.
+The fitted model exposes the distance and entropy contributions separately:
+
+```python
+model.distance_term_
+model.entropy_term_
+model.objective_
+```
+
+and convergence diagnostics through `status_`, `cycle_period_`, `n_iter_`, and `restart_objectives_`.
+
+Multiple restarts are selected by the lowest complete entropy-regularized objective. Empty-cluster repair uses distinct farthest observations within an iteration. An explicit `temperature_rule` and `initial_labels` can be supplied when reproducing manuscript experiments; these choices alter the experimental protocol without creating another LAC implementation.
 
 ## Shared workflow
 
-LAC is normally executed through the repository-level workflow:
-
 ```bash
-python run_workflow.py data/test/df_baseline.csv
+dela-sne-run data/test/df_baseline.csv
 ```
 
-Its observation-level outputs are written into the common result CSV as `lac_cluster` and `lac_distance`. The cluster-level feature-weight matrix is available as `model.feature_weights_`; it is intentionally not repeated on every result row. The result filename follows `<test_stem>_result_YYYYMMDD.csv`.
+The stable output is `data/result/df_baseline_result.csv`. The result CSV contains observation-level labels and distances; the cluster-level feature weights remain in `model.feature_weights_`.
 
 ## Reference
 
 C. Domeniconi, D. Gunopulos, S. Ma, B. Yan, M. Al-Razgan, and D. Papadopoulos, “Locally Adaptive Metrics for Clustering High Dimensional Data,” *Data Mining and Knowledge Discovery* 14, 63–97 (2007), DOI `10.1007/s10618-006-0060-8`.
 
-See [`docs/`](docs/) for methodological documentation and [`../references/references.bib`](../references/references.bib) for the project bibliography.
+See [`docs/`](docs/) and the canonical bibliography [`../references/references.bib`](../references/references.bib).

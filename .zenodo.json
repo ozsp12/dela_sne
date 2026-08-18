@@ -1,0 +1,18 @@
+{
+  "title": "DELA-SNE research software",
+  "description": "Reference implementations and reproducible experiments for locally adaptive clustering, stochastic neighbor embedding, and the DELA-SNE research program.",
+  "creators": [
+    {
+      "name": "Santos-Pereira, Osvaldo L."
+    }
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "keywords": [
+    "clustering",
+    "t-SNE",
+    "locally adaptive metrics",
+    "dimensionality reduction",
+    "statistical mechanics"
+  ]
+}

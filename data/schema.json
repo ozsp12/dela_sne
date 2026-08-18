@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ozsp12/dela_sne/blob/main/data/schema.json",
+  "title": "DELA-SNE workflow CSV row",
+  "description": "Schema for one parsed row of an input CSV consumed by dela-sne-run. Feature columns are named feature_1, feature_2, ...; additional metadata columns are preserved but excluded from model input.",
+  "type": "object",
+  "required": ["feature_1"],
+  "properties": {
+    "true_cluster": {
+      "description": "Optional validation label. It is metadata and is never used as a model feature.",
+      "type": ["integer", "number", "string", "null"]
+    }
+  },
+  "patternProperties": {
+    "^feature_[1-9][0-9]*$": {
+      "description": "Finite numeric model feature.",
+      "type": "number"
+    }
+  },
+  "additionalProperties": true
+}
