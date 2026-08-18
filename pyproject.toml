@@ -52,6 +52,10 @@ line-length = 88
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 
+[tool.ruff.lint.per-file-ignores]
+"scripts/apply_scientific_revision.py" = ["E501"]
+"scripts/fix_scientific_revision_helper.py" = ["E501"]
+
 [tool.mypy]
 python_version = "3.11"
 files = ["src/dela_sne"]
