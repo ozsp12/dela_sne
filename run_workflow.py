@@ -70,7 +70,7 @@ def write_result(
         writer = csv.DictWriter(handle, fieldnames=result_fields)
         writer.writeheader()
         for index, source in enumerate(source_rows):
-            result = dict(source)
+            result: dict[str, str | int] = dict(source)
             result["lac_cluster"] = int(lac.labels_[index])
             result["lac_distance"] = f"{lac.distance_to_assigned_[index]:.8g}"
             for j in range(embedding.shape[1]):
