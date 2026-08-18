@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dela-sne"
+version = "0.1.0.dev0"
+description = "Reference implementations and experiments for locally adaptive clustering and stochastic neighbor embedding."
+readme = "README.md"
+requires-python = ">=3.11"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Osvaldo L. Santos-Pereira"},
+]
+dependencies = [
+  "numpy>=2.1,<2.2",
+]
+
+[project.optional-dependencies]
+paper = [
+  "scipy>=1.14,<1.15",
+  "matplotlib>=3.9,<3.10",
+  "scikit-learn>=1.5,<1.6",
+]
+test = [
+  "pytest>=8.3,<8.4",
+  "pytest-cov>=5,<6",
+  "scikit-learn>=1.5,<1.6",
+]
+dev = [
+  "ruff>=0.7,<0.8",
+  "mypy>=1.13,<1.14",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=dela_sne --cov-report=term-missing --cov-fail-under=70"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/dela_sne", "run_workflow.py"]
+warn_unused_configs = true
+check_untyped_defs = true
+no_implicit_optional = true
