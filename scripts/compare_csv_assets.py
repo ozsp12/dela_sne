@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import argparse
 import csv
-from pathlib import Path
 import math
 import sys
+from pathlib import Path
 
 
 def _numeric(value: str) -> float | None:
@@ -25,9 +25,12 @@ def compare_file(expected: Path, actual: Path, rtol: float, atol: float) -> list
         actual_rows = list(csv.reader(right))
 
     if len(expected_rows) != len(actual_rows):
-        return [f"{actual.name}: row count {len(actual_rows)} != {len(expected_rows)}"]
+        return [
+            f"{actual.name}: row count {len(actual_rows)} != {len(expected_rows)}"
+        ]
 
-    for i, (exp_row, act_row) in enumerate(zip(expected_rows, actual_rows, strict=True)):
+    paired_rows = zip(expected_rows, actual_rows, strict=True)
+    for i, (exp_row, act_row) in enumerate(paired_rows):
         if len(exp_row) != len(act_row):
             errors.append(
                 f"{actual.name}: row {i} column count {len(act_row)} != {len(exp_row)}"
@@ -41,7 +44,8 @@ def compare_file(expected: Path, actual: Path, rtol: float, atol: float) -> list
                     continue
                 if not math.isclose(exp_num, act_num, rel_tol=rtol, abs_tol=atol):
                     errors.append(
-                        f"{actual.name}: row {i}, column {j}: {act} != {exp} within tolerance"
+                        f"{actual.name}: row {i}, column {j}: "
+                        f"{act} != {exp} within tolerance"
                     )
             elif exp != act:
                 errors.append(
