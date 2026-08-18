@@ -35,6 +35,12 @@ text = text.replace(
                     "relative_gap_hstar_error": (
                         hstars_gap[spectrum_name] - hstar_analytic
                     ) / hstar_analytic,
+                    # Temporary compatibility aliases used only while the already
+                    # materialized manuscript helper is being retired.
+                    "hstar_numeric": hstars_global[spectrum_name],
+                    "relative_hstar_error": (
+                        hstars_global[spectrum_name] - hstar_analytic
+                    ) / hstar_analytic,
                     "low_temperature_peak": int(
                         hstars_global[spectrum_name] < 0.5 * hstar_analytic
                     ),
@@ -67,6 +73,8 @@ text = text.replace(
             "hstar_global_numeric",
             "hstar_gap_numeric",
             "relative_gap_hstar_error",
+            "hstar_numeric",
+            "relative_hstar_error",
             "low_temperature_peak",
             "kmeans_global_mean_hstar",
             "mean_relevant",''')
