@@ -2,7 +2,7 @@
 
 Research repository for **Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding (DELA-SNE)** and its two algorithmic foundations: **Locally Adaptive Clustering (LAC)** and **t-distributed Stochastic Neighbor Embedding (t-SNE)**.
 
-The repository separates clustering, embedding, data, reproducible execution, manuscript material, and references. LAC and t-SNE are implemented as independent reference modules. DELA-SNE remains a research implementation target and is not yet frozen as software.
+The repository separates reference algorithms, reusable data workflows, and a self-contained manuscript tree. LAC and t-SNE are implemented as independent reference modules. DELA-SNE remains a research implementation target and is not yet frozen as software.
 
 ## Algorithms
 
@@ -11,8 +11,6 @@ The repository separates clustering, embedding, data, reproducible execution, ma
 | LAC | clustering with cluster-dependent feature relevance | [`lac/lac.py`](lac/lac.py) | hard cluster, assigned weighted distance, local feature weights |
 | t-SNE | nonlinear probabilistic embedding | [`tsne/tsne.py`](tsne/tsne.py) | two-dimensional embedding |
 | DELA-SNE | proposed method | pending | pending |
-
-The LAC implementation follows the entropy-regularized feature-weight update of Domeniconi et al. The t-SNE implementation is an explicit exact NumPy implementation intended for small reproducible datasets rather than large-scale workloads.
 
 ## Repository structure
 
@@ -26,25 +24,25 @@ dela_sne/
 │       └── algorithms.yml
 ├── data/
 │   ├── test/
-│   │   └── df_baseline.csv
 │   └── result/
-│       └── df_baseline_result_YYYYMMDD.csv
 ├── lac/
-│   ├── __init__.py
-│   ├── lac.py
-│   ├── README.md
-│   └── docs/
 ├── tsne/
-│   ├── __init__.py
-│   ├── tsne.py
-│   ├── README.md
-│   └── docs/
 ├── dela_sne/
-│   ├── README.md
-│   └── docs/
 ├── paper/
+│   ├── main.tex
+│   ├── references.bib
+│   ├── figures/
+│   │   └── *.pdf
+│   └── experiments/
+│       ├── run_experiments.py
+│       ├── requirements.txt
+│       ├── README.md
+│       ├── MANIFEST.txt
+│       └── assets/
+│           ├── source_images/
+│           │   └── *.png
+│           └── *.csv
 ├── references/
-│   └── references.bib
 ├── docs/
 └── tests/
 ```
@@ -55,55 +53,42 @@ dela_sne/
 
 The committed baseline dataset, [`data/test/df_baseline.csv`](data/test/df_baseline.csv), is a deterministic synthetic benchmark generated with random seed 42. It contains 96 observations, eight numerical features, and three known groups. Informative dimensions differ by group, while other dimensions contain larger nuisance variation. The `true_cluster` column is retained only for validation and is excluded from algorithm inputs.
 
-## Joint workflow
+## Joint algorithm workflow
 
-Run both implemented algorithms over every CSV in `data/test/`:
+Run both implemented reference algorithms over every CSV in `data/test/`:
 
 ```bash
 python run_workflow.py
 ```
 
-Run a specific file:
+For an input such as `data/test/df_baseline.csv`, outputs are written under `data/result/` with the execution date in the result file name.
+
+## Manuscript and paper experiments
+
+[`paper/`](paper/) is self-contained. It contains the current LaTeX source, its bibliography, final PDF figures, the complete experiment driver, numerical CSV outputs, and PNG companion/source exports.
+
+Regenerate the paper experiment assets with:
 
 ```bash
-python run_workflow.py data/test/df_baseline.csv
+python -m pip install -r paper/experiments/requirements.txt
+python paper/experiments/run_experiments.py
 ```
 
-Relevant parameters can be controlled from the command line:
+The experiment uses stable file names and overwrites the current assets. Historical versions are provided by Git rather than timestamped duplicate files.
+
+Compile the manuscript from `paper/` with:
 
 ```bash
-python run_workflow.py --clusters 3 --h 0.5 --perplexity 30 --seed 42
+latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
 ```
-
-For an input named
-
-```text
-data/test/df_baseline.csv
-```
-
-an execution on 17 August 2026 writes
-
-```text
-data/result/df_baseline_result_20260817.csv
-```
-
-The result preserves the input columns and adds the row-level outputs `lac_cluster`, `lac_distance`, `tsne_1`, and `tsne_2`. The cluster-level LAC feature weights remain available through `LAC.feature_weights_` and are not duplicated on every CSV row.
-
-All model features are standardized once inside the shared workflow before either algorithm is executed, so the two methods receive the same numerical input representation.
 
 ## GitHub Actions
 
-[`.github/workflows/algorithms.yml`](.github/workflows/algorithms.yml) provides the joint CI workflow. It installs the project dependency, runs unit/smoke tests, executes LAC and t-SNE on the committed test datasets, and uploads the generated `data/result/*.csv` files as a workflow artifact.
+[`.github/workflows/algorithms.yml`](.github/workflows/algorithms.yml) is the repository CI workflow. It runs unit tests and the joint LAC/t-SNE workflow, executes the complete paper experiment, verifies that all expected manuscript figures and numerical assets are generated, checks that committed paper assets are reproducible, compiles `paper/main.tex`, and uploads the algorithm results, paper assets, and compiled manuscript as workflow artifacts.
 
 ## Reproducibility
 
-The reference workflow uses fixed seeds by default. Exact t-SNE is quadratic in the number of observations and is deliberately used here because the baseline is small and the implementation is intended to remain mathematically inspectable. Large datasets should use an accelerated implementation rather than this reference code.
-
-## Associated manuscript
-
-The repository accompanies the manuscript on the statistical-mechanical interpretation of LAC and SNE/t-SNE and the subsequent DELA-SNE construction. Manuscript-related material is maintained under [`paper/`](paper/).
-
-The canonical machine-readable bibliography is [`references/references.bib`](references/references.bib). It is synchronized with the current manuscript reference list.
+The reference algorithm workflow and the paper experiment use fixed seeds. The paper experiment stores numerical outputs in `paper/experiments/assets/`, PNG companion exports in `paper/experiments/assets/source_images/`, and final vector figures in `paper/figures/`. The LaTeX source references only files inside `paper/`, so that directory can be archived or compiled independently after installing the documented dependencies.
 
 ## Documentation
 

@@ -1,0 +1,15 @@
+run_experiments.py
+requirements.txt
+README.md
+assets/lac_convergence_results.csv
+assets/lac_multiseed_results.csv
+assets/lac_real_benchmarks.csv
+assets/numerical_summary.csv
+assets/source_images/annealing_bifurcation.png
+assets/source_images/lac_multiseed_validation.png
+assets/source_images/sne_density_scaling.png
+assets/source_images/sne_neighbor_response.png
+../figures/annealing_bifurcation.pdf
+../figures/lac_multiseed_validation.pdf
+../figures/sne_density_scaling.pdf
+../figures/sne_neighbor_response.pdf

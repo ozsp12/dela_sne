@@ -18,8 +18,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install repository dependencies
         run: python -m pip install -r requirements.txt
+
+      - name: Install paper experiment dependencies
+        run: python -m pip install -r paper/experiments/requirements.txt
 
       - name: Run tests
         run: python -m unittest discover -s tests -p "test_*.py"
@@ -27,8 +30,61 @@ jobs:
       - name: Run joint LAC and t-SNE workflow
         run: python run_workflow.py
 
-      - name: Upload result datasets
+      - name: Run paper experiments
+        run: python paper/experiments/run_experiments.py
+
+      - name: Verify paper assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected=(
+            paper/figures/annealing_bifurcation.pdf
+            paper/figures/lac_multiseed_validation.pdf
+            paper/figures/sne_density_scaling.pdf
+            paper/figures/sne_neighbor_response.pdf
+            paper/experiments/assets/source_images/annealing_bifurcation.png
+            paper/experiments/assets/source_images/lac_multiseed_validation.png
+            paper/experiments/assets/source_images/sne_density_scaling.png
+            paper/experiments/assets/source_images/sne_neighbor_response.png
+            paper/experiments/assets/lac_convergence_results.csv
+            paper/experiments/assets/lac_multiseed_results.csv
+            paper/experiments/assets/lac_real_benchmarks.csv
+            paper/experiments/assets/numerical_summary.csv
+          )
+          for file in "${expected[@]}"; do
+            test -s "$file" || { echo "Missing or empty paper asset: $file"; exit 1; }
+          done
+          git diff --exit-code -- paper/figures paper/experiments/assets || {
+            echo "Committed paper assets are stale. Regenerate them with paper/experiments/run_experiments.py."
+            exit 1
+          }
+
+      - name: Compile manuscript
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: paper
+
+      - name: Verify manuscript PDF
+        run: test -s paper/main.pdf
+
+      - name: Upload algorithm result datasets
         uses: actions/upload-artifact@v4
         with:
           name: algorithm-results
           path: data/result/*.csv
+
+      - name: Upload paper experiment assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-experiment-assets
+          path: |
+            paper/figures/*.pdf
+            paper/experiments/assets/*.csv
+            paper/experiments/assets/source_images/*.png
+
+      - name: Upload compiled manuscript
+        uses: actions/upload-artifact@v4
+        with:
+          name: manuscript
+          path: paper/main.pdf
