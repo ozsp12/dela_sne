@@ -2,7 +2,7 @@ name: algorithms
 
 on:
   push:
-    branches: [main, agent/scientific-revision-schottky]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -163,7 +163,7 @@ jobs:
           path: paper/main.pdf
 
   materialize-scientific-revision:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/agent/scientific-revision-schottky' && github.actor != 'github-actions[bot]'
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/scientific-revision-schottky' && github.actor != 'github-actions[bot]'
     permissions:
       contents: write
     runs-on: ubuntu-latest
