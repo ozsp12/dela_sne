@@ -21,6 +21,13 @@ jobs:
 
       - name: Reconstruct and verify final paper tree
         run: |
+          wc -c .bootstrap/chunk_*.b64
+          sha256sum .bootstrap/chunk_*.b64
+          echo "ad00fb6185a15171af2bccdf53a950d09df59cdc3da9d60e9613fc023d1d04d3  .bootstrap/chunk_01.b64" | sha256sum -c -
+          echo "e78538189a0ee403c041f78a13334fa290e5d9cd0fcabc69d2695a4da36253ba  .bootstrap/chunk_02.b64" | sha256sum -c -
+          echo "34fea65aee00c3aa0705b8ed98996a143b943433f29a5c79dce1669af26106c4  .bootstrap/chunk_03.b64" | sha256sum -c -
+          echo "41ea0c0792b24818cce9a760ed36c6146f8df7e6714ff0e87016b883b8418a23  .bootstrap/chunk_04.b64" | sha256sum -c -
+          echo "27dda76016b33983b6637d2ebb78b88d8b5279c795de4392a2e337e376210c71  .bootstrap/chunk_05.b64" | sha256sum -c -
           cat .bootstrap/chunk_*.b64 | base64 -d > /tmp/paper_refactor.zip
           echo "298fc6171dcf473a5019c2e13d74291668b22d7e2336dee7a081546a4857dd16  /tmp/paper_refactor.zip" | sha256sum -c -
           python - <<'PY'
