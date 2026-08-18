@@ -193,7 +193,11 @@ class TSNE:
         status = "max_iter"
 
         for iteration in range(self.n_iter):
-            scale = self.early_exaggeration if iteration < self.exaggeration_iter else 1.0
+            scale = (
+                self.early_exaggeration
+                if iteration < self.exaggeration_iter
+                else 1.0
+            )
             momentum = 0.5 if iteration < self.exaggeration_iter else 0.8
             gradient = kl_gradient(P, Y, scale=scale)
             grad_norm = float(np.linalg.norm(gradient))
