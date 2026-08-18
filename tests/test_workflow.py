@@ -33,6 +33,7 @@ def test_workflow_uses_stable_result_name(tmp_path: Path) -> None:
     )
 
     assert output.name == "sample_result.csv"
+    assert b"\r\n" not in output.read_bytes()
     with output.open(encoding="utf-8", newline="") as handle:
         rows = list(csv.DictReader(handle))
     assert len(rows) == len(X)
