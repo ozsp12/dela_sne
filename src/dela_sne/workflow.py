@@ -72,7 +72,11 @@ def write_result(
     ]
 
     with output_path.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=result_fields)
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=result_fields,
+            lineterminator="\n",
+        )
         writer.writeheader()
         for index, source in enumerate(source_rows):
             result: dict[str, str | int] = dict(source)
