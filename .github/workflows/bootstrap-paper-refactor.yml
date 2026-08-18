@@ -3,6 +3,8 @@ name: bootstrap-paper-refactor
 on:
   push:
     branches: [agent/self-contained-paper-refactor]
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
@@ -44,7 +46,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -r --ignore-unmatch paper_experiment
-          git rm -r --ignore-unmatch .bootstrap/paper_refactor.zip
+          git rm -r --ignore-unmatch .bootstrap
           git rm --ignore-unmatch .github/workflows/bootstrap-paper-refactor.yml
           git add README.md .github/workflows/algorithms.yml paper
           git add -A
