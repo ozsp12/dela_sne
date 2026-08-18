@@ -27,6 +27,20 @@ N_SEEDS = 30
 K_SYN = 3
 H_GRID = np.geomspace(0.01, 8.0, 160)  # common response/oracle grid and domain
 MAX_ITER = 100
+
+
+def csv_value(value):
+    """Return a deterministic, platform-stable representation for CSV output."""
+    if isinstance(value, (float, np.floating)):
+        value = float(value)
+        if np.isnan(value):
+            return "nan"
+        if np.isposinf(value):
+            return "inf"
+        if np.isneginf(value):
+            return "-inf"
+        return f"{value:.12g}"
+    return value
 EXPERIMENT_DIR = Path(__file__).resolve().parent
 PAPER_DIR = EXPERIMENT_DIR.parent
 ASSET_DIR = EXPERIMENT_DIR / "assets"
@@ -344,7 +358,7 @@ def multiseed_lac_validation():
         wr = csv.DictWriter(fh, fieldnames=fields)
         wr.writeheader()
         for r in raw + std:
-            wr.writerow({k: r[k] for k in fields})
+            wr.writerow({k: csv_value(r[k]) for k in fields})
 
     conv_fields = ["seed", "standardized", "adaptive_iter", "adaptive_status", "adaptive_cycle_period",
                    "adaptive_h_unique", "frozen_iter", "frozen_status", "frozen_cycle_period"]
@@ -352,7 +366,7 @@ def multiseed_lac_validation():
         wr = csv.DictWriter(fh, fieldnames=conv_fields)
         wr.writeheader()
         for r in raw + std:
-            wr.writerow({k: r[k] for k in conv_fields})
+            wr.writerow({k: csv_value(r[k]) for k in conv_fields})
 
     return raw, std, hstar0
 
@@ -385,7 +399,7 @@ def real_dataset_benchmarks():
             rows.append(row)
     with open(ASSET_DIR / "lac_real_benchmarks.csv", "w", newline="") as fh:
         wr = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
-        wr.writeheader(); wr.writerows(rows)
+        wr.writeheader(); wr.writerows({k: csv_value(v) for k, v in r.items()} for r in rows)
     return rows
 
 
