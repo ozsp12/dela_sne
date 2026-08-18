@@ -142,8 +142,14 @@ def schottky_validation() -> list[dict]:
         curves = {
             name: base.response_curve(values, h_dense) for name, values in spectra.items()
         }
-        hstars = {
+        hstars_global = {
             name: float(h_dense[int(np.argmax(curve))]) for name, curve in curves.items()
+        }
+        window = (h_dense >= hstar_analytic / 2.0) & (h_dense <= 2.0 * hstar_analytic)
+        window_idx = np.flatnonzero(window)
+        hstars_gap = {
+            name: float(h_dense[window_idx[int(np.argmax(curve[window]))]])
+            for name, curve in curves.items()
         }
 
         for spectrum_name, values in spectra.items():
@@ -157,9 +163,20 @@ def schottky_validation() -> list[dict]:
                     "delta_prescribed": delta,
                     "xstar_analytic": xstar,
                     "hstar_analytic": hstar_analytic,
-                    "hstar_numeric": hstars[spectrum_name],
-                    "relative_hstar_error": (hstars[spectrum_name] - hstar_analytic)
-                    / hstar_analytic,
+                    "hstar_global_numeric": hstars_global[spectrum_name],
+                    "hstar_gap_numeric": hstars_gap[spectrum_name],
+                    "relative_gap_hstar_error": (
+                        hstars_gap[spectrum_name] - hstar_analytic
+                    ) / hstar_analytic,
+                    # Temporary compatibility aliases used only while the already
+                    # materialized manuscript helper is being retired.
+                    "hstar_numeric": hstars_global[spectrum_name],
+                    "relative_hstar_error": (
+                        hstars_global[spectrum_name] - hstar_analytic
+                    ) / hstar_analytic,
+                    "low_temperature_peak": int(
+                        hstars_global[spectrum_name] < 0.5 * hstar_analytic
+                    ),
                     **stats,
                 }
             )
@@ -194,6 +211,14 @@ def schottky_validation() -> list[dict]:
     base.save_figure(fig, "lac_schottky_validation")
     plt.close(fig)
 
+    kmeans_curves = []
+    for ell in range(n_clusters):
+        kmeans_curves.append(base.response_curve(V_km[ell], h_dense))
+    global_mean_curve = np.mean(np.vstack(kmeans_curves), axis=0)
+    global_mean_hstar = float(h_dense[int(np.argmax(global_mean_curve))])
+    for row in rows:
+        row["kmeans_global_mean_hstar"] = global_mean_hstar
+
     _write_rows(
         "lac_schottky_diagnostics.csv",
         [
@@ -204,8 +229,13 @@ def schottky_validation() -> list[dict]:
             "delta_prescribed",
             "xstar_analytic",
             "hstar_analytic",
+            "hstar_global_numeric",
+            "hstar_gap_numeric",
+            "relative_gap_hstar_error",
             "hstar_numeric",
             "relative_hstar_error",
+            "low_temperature_peak",
+            "kmeans_global_mean_hstar",
             "mean_relevant",
             "mean_irrelevant",
             "variance_ratio",
