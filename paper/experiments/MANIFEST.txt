@@ -13,3 +13,17 @@ assets/source_images/sne_neighbor_response.png
 ../figures/lac_multiseed_validation.pdf
 ../figures/sne_density_scaling.pdf
 ../figures/sne_neighbor_response.pdf
+
+revision_experiments.py
+assets/lac_schottky_diagnostics.csv
+assets/lac_unsupervised_baselines.csv
+assets/lac_stress_tests.csv
+assets/sne_perplexity_validation.csv
+assets/source_images/lac_schottky_validation.png
+assets/source_images/lac_selector_baselines.png
+assets/source_images/lac_stress_tests.png
+assets/source_images/sne_perplexity_validation.png
+../figures/lac_schottky_validation.pdf
+../figures/lac_selector_baselines.pdf
+../figures/lac_stress_tests.pdf
+../figures/sne_perplexity_validation.pdf

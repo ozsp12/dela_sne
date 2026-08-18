@@ -32,3 +32,7 @@ Each run overwrites stable names:
 Seeds 1729-1758 are used for the 30-realization experiments. Real datasets are loaded from scikit-learn and require no network request.
 
 CI preserves the committed CSV baselines before execution and compares regenerated numeric values using explicit tolerances. It does not require byte-identical figures.
+
+## Scientific revision diagnostics
+
+The paper driver also runs `revision_experiments.py`, which adds the two-level Schottky validation, matched-grid response/silhouette/stability temperature selectors, controlled LAC stress tests, and direct multi-perplexity validation of the SNE first-order tolerance rule. These diagnostics use the canonical installed LAC implementation and write stable CSV/figure names under the same asset contract.
