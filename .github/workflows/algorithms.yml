@@ -30,26 +30,21 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: requirements.lock
-
       - name: Install locked dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.lock
           python -m pip install -e . --no-deps
-
       - name: Lint
         run: ruff check src tests scripts
-
       - name: Type check
         run: mypy
-
       - name: Test with coverage
         run: pytest
 
@@ -62,22 +57,18 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.lock
-
       - name: Install locked dependencies
         run: |
           python -m pip install -r requirements.lock
           python -m pip install -e . --no-deps
-
       - name: Run canonical LAC and t-SNE workflow
         run: dela-sne-run
-
       - name: Upload algorithm results
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -93,34 +84,27 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.lock
-
       - name: Install locked dependencies and package
         run: |
           python -m pip install -r requirements.lock
           python -m pip install -e . --no-deps
-
       - name: Verify bibliography synchronization
         run: python scripts/sync_bibliography.py --check
-
       - name: Preserve committed numerical baselines
         run: cp -R paper/experiments/assets /tmp/paper-assets-baseline
-
       - name: Run paper experiments
         run: python paper/experiments/run_experiments.py
-
       - name: Compare numerical assets with tolerance
         run: >-
           python scripts/compare_csv_assets.py
           /tmp/paper-assets-baseline paper/experiments/assets
           --rtol 1e-8 --atol 1e-10
-
       - name: Verify generated figures
         shell: bash
         run: |
@@ -146,16 +130,13 @@ jobs:
           for file in "${expected[@]}"; do
             test -s "$file" || { echo "Missing or empty paper asset: $file"; exit 1; }
           done
-
       - name: Compile manuscript
         uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b # v4
         with:
           root_file: main.tex
           working_directory: paper
-
       - name: Verify manuscript PDF
         run: test -s paper/main.pdf
-
       - name: Upload paper experiment assets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -164,9 +145,35 @@ jobs:
             paper/figures/*.pdf
             paper/experiments/assets/*.csv
             paper/experiments/assets/source_images/*.png
-
       - name: Upload compiled manuscript
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: manuscript
           path: paper/main.pdf
+
+  materialize-editorial-hotfix:
+    if: github.event_name == 'pull_request' && github.head_ref == 'agent/fix-sne-tolerance-section' && github.actor != 'github-actions[bot]'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout hotfix branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: agent/fix-sne-tolerance-section
+          fetch-depth: 0
+      - name: Apply editorial hotfix
+        run: python paper/_apply_editorial_hotfix.py
+      - name: Compile hotfixed manuscript
+        uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b # v4
+        with:
+          root_file: main.tex
+          working_directory: paper
+      - name: Commit hotfix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/main.tex
+          git commit -m "Fix SNE tolerance section and conclusion" || exit 0
+          git push origin HEAD:agent/fix-sne-tolerance-section
