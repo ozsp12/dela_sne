@@ -1,54 +1,48 @@
 # t-distributed Stochastic Neighbor Embedding (t-SNE)
 
-This module contains an explicit **exact t-SNE reference implementation in NumPy**. It is designed for small reproducible datasets and mathematical inspection rather than large-scale production use.
+This directory contains method-specific documentation for t-SNE. The executable exact NumPy implementation is canonicalized at [`../src/dela_sne/tsne.py`](../src/dela_sne/tsne.py).
 
-## Files
-
-```text
-tsne/
-├── __init__.py
-├── tsne.py
-├── README.md
-└── docs/
-```
-
-The implementation performs:
-
-1. pairwise squared Euclidean distances in the input space;
-2. pointwise binary search for beta_i = (2 sigma_i^2)^(-1) at fixed perplexity;
-3. symmetrization of the high-dimensional probabilities;
-4. Student-t affinities in the low-dimensional space;
-5. gradient descent on the Kullback–Leibler objective with early exaggeration and momentum.
+The implementation performs the high-dimensional perplexity search, symmetric joint probabilities, Student-t low-dimensional affinities, and gradient descent on the Kullback-Leibler objective.
 
 ## Software interface
 
 ```python
-from tsne import TSNE
+from dela_sne import TSNE
 
 model = TSNE(
     n_components=2,
     perplexity=30,
-    learning_rate=100,
-    n_iter=500,
+    learning_rate="auto",
+    init="pca",
+    n_iter=1000,
     random_state=42,
 )
-
 embedding = model.fit_transform(X)
 ```
 
-The fitted object exposes `embedding_`, `P_`, `P_conditional_`, `sigmas_`, `kl_history_`, and `kl_divergence_`.
+The fitted model exposes `P_`, `P_conditional_`, `sigmas_`, `kl_history_`, `kl_divergence_`, `learning_rate_`, `n_iter_`, and `status_`.
 
-The implementation is O(n^2) in storage and computation for the pairwise probability matrices. It is therefore deliberately a reference implementation.
+## Optimizer details
+
+The reference optimizer now includes:
+
+- PCA or random initialization;
+- adaptive per-coordinate gains;
+- `learning_rate="auto"`, using `max(n / (4 * early_exaggeration), 50)`;
+- early exaggeration and momentum;
+- stopping by gradient norm after the exaggeration phase.
+
+Strict step-by-step monotonic decrease of KL is not asserted because momentum does not guarantee it. The test suite instead verifies post-exaggeration improvement and checks the analytic KL gradient against finite differences.
+
+The implementation remains O(n^2) in time/storage for pairwise probability matrices. It is intended as a mathematically inspectable reference, not a high-throughput replacement for Barnes-Hut or FFT implementations.
 
 ## Shared workflow
-
-t-SNE is normally executed together with LAC:
 
 ```bash
 python run_workflow.py data/test/df_baseline.csv
 ```
 
-The two embedding coordinates are appended to the common result CSV as `tsne_1` and `tsne_2`. The result filename follows `<test_stem>_result_YYYYMMDD.csv`.
+The coordinates are appended to the stable output `data/result/df_baseline_result.csv` as `tsne_1` and `tsne_2`.
 
 ## Canonical references
 
