@@ -35,7 +35,7 @@ jobs:
           python -m pip install -e . --no-deps
 
       - name: Lint
-        run: ruff check src tests run_workflow.py scripts
+        run: ruff check src tests scripts
 
       - name: Type check
         run: mypy
@@ -63,7 +63,7 @@ jobs:
           python -m pip install -e . --no-deps
 
       - name: Run canonical LAC and t-SNE workflow
-        run: python run_workflow.py
+        run: dela-sne-run
 
       - name: Upload algorithm results
         uses: actions/upload-artifact@v4
