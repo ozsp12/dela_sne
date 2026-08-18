@@ -1,6 +1,6 @@
 """Reproduce the statistical-mechanics experiments used in the manuscript.
 
-Outputs are written to ``experiments/statistical_mechanics/outputs``.
+Outputs are written to ``paper_experiment/assets``.
 The script uses only datasets bundled with scikit-learn and therefore does not
 require network access. All stochastic experiments use explicitly recorded
 seeds.
@@ -22,7 +22,7 @@ N_SEEDS = 30
 K_SYN = 3
 H_GRID = np.geomspace(0.01, 8.0, 160)
 MAX_ITER = 100
-OUT = Path(__file__).resolve().parent / "outputs"
+OUT = Path(__file__).resolve().parent / "assets"
 OUT.mkdir(parents=True, exist_ok=True)
 
 
