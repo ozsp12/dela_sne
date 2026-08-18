@@ -16,6 +16,9 @@ dependencies = [
   "numpy>=2.1,<2.2",
 ]
 
+[project.scripts]
+dela-sne-run = "dela_sne.workflow:main"
+
 [project.optional-dependencies]
 paper = [
   "scipy>=1.14,<1.15",
@@ -51,7 +54,7 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["src/dela_sne", "run_workflow.py"]
+files = ["src/dela_sne"]
 warn_unused_configs = true
 check_untyped_defs = true
 no_implicit_optional = true
