@@ -1,8 +1,8 @@
 # DELA-SNE
 
-Research software and manuscript repository for **Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding (DELA-SNE)** and its two reference foundations: **Locally Adaptive Clustering (LAC)** and **t-distributed Stochastic Neighbor Embedding (t-SNE)**.
+Research software repository for the **Dual-Entropy Locally Adaptive Stochastic Neighbor Embedding (DELA-SNE)** research program and its two reference foundations: **Locally Adaptive Clustering (LAC)** and **t-distributed Stochastic Neighbor Embedding (t-SNE)**.
 
-The executable reference code has one canonical location: [`src/dela_sne/`](src/dela_sne/). The top-level [`lac/`](lac/) and [`tsne/`](tsne/) directories contain method-specific documentation, while [`paper/`](paper/) contains the self-contained manuscript and its experiment layer.
+The executable reference code has one canonical location: [`src/dela_sne/`](src/dela_sne/). The top-level [`lac/`](lac/) and [`tsne/`](tsne/) directories contain method-specific documentation, while [`paper/`](paper/) contains the current self-contained manuscript and its experiment layer.
 
 ## Status
 
@@ -13,6 +13,14 @@ The executable reference code has one canonical location: [`src/dela_sne/`](src/
 | DELA-SNE | mathematical specification in progress | [freeze checklist](docs/dela_sne.md) |
 
 DELA-SNE is intentionally not exposed as a stable class until the metric, entropy coupling, symmetrization, objective, gradient, initialization, stopping rules, and validation protocol satisfy the explicit freeze checklist.
+
+## Current manuscript
+
+The manuscript currently reproduced by this repository is:
+
+*Feature and Neighbor Ensembles in Locally Adaptive Clustering and Stochastic Neighbor Embedding: Response Functions and Perplexity Tolerance*.
+
+It studies response diagnostics, feature and neighbor ensembles, temperature selection, perplexity tolerance, deterministic annealing, and numerical validation. It is a foundational article within the wider DELA-SNE project; it does **not** claim to define the final DELA-SNE algorithm. See [`docs/paper.md`](docs/paper.md) for the project/manuscript boundary.
 
 ## Installation
 
@@ -44,9 +52,10 @@ dela_sne/
 ├── lac/                    # LAC documentation
 ├── tsne/                   # t-SNE documentation
 ├── data/
+│   ├── schema.json         # machine-readable workflow row schema
 │   ├── test/               # versioned deterministic inputs
 │   └── result/             # generated stable-name outputs
-├── paper/                  # manuscript and numerical experiment layer
+├── paper/                  # current manuscript and numerical experiment layer
 ├── references/
 │   └── references.bib      # canonical bibliography
 ├── scripts/                # reproducibility checks
@@ -89,6 +98,8 @@ Or run one file:
 dela-sne-run data/test/df_baseline.csv
 ```
 
+Input feature columns follow the `feature_1`, `feature_2`, ... convention. Additional columns are preserved as metadata and excluded from model input. The row contract is declared in the machine-readable [`data/schema.json`](data/schema.json).
+
 Outputs use stable names. For example:
 
 ```text
@@ -96,7 +107,7 @@ data/test/df_baseline.csv
         -> data/result/df_baseline_result.csv
 ```
 
-Git records historical changes; timestamps are not encoded in filenames. Generated result CSVs are ignored by default and are uploaded by CI as artifacts.
+Git records historical changes; timestamps are not encoded in filenames. Generated result CSVs are ignored by default and are uploaded by CI as artifacts. CSV outputs use explicit LF line endings for platform-stable regeneration.
 
 The baseline dataset contains eight numeric feature columns and a `true_cluster` validation label that is excluded from model input.
 
@@ -129,7 +140,7 @@ CI runs Python 3.11 and 3.12 quality jobs with:
 - deterministic and finite-difference t-SNE tests;
 - workflow contract tests.
 
-Separate jobs execute the shared data workflow and reproduce/compile the manuscript. The workflow has `contents: read`; it does not push generated PDFs back to the repository. Result datasets, experiment assets, and the compiled manuscript are published as CI artifacts.
+Separate jobs execute the shared data workflow and reproduce/compile the manuscript. The workflow has `contents: read`; it does not push generated PDFs back to the repository. Concurrency cancellation prevents obsolete runs from consuming resources, and each job has an explicit timeout. Result datasets, experiment assets, and the compiled manuscript are published as CI artifacts.
 
 ## References and redistribution
 
