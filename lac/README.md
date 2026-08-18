@@ -45,7 +45,7 @@ Multiple restarts are selected by the lowest complete entropy-regularized object
 ## Shared workflow
 
 ```bash
-python run_workflow.py data/test/df_baseline.csv
+dela-sne-run data/test/df_baseline.csv
 ```
 
 The stable output is `data/result/df_baseline_result.csv`. The result CSV contains observation-level labels and distances; the cluster-level feature weights remain in `model.feature_weights_`.
