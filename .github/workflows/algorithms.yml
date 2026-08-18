@@ -2,7 +2,7 @@ name: algorithms
 
 on:
   push:
-    branches: [main]
+    branches: [main, agent/scientific-revision-schottky]
   pull_request:
   workflow_dispatch:
 
@@ -130,10 +130,18 @@ jobs:
             paper/figures/lac_multiseed_validation.pdf
             paper/figures/sne_density_scaling.pdf
             paper/figures/sne_neighbor_response.pdf
+            paper/figures/lac_schottky_validation.pdf
+            paper/figures/lac_selector_baselines.pdf
+            paper/figures/lac_stress_tests.pdf
+            paper/figures/sne_perplexity_validation.pdf
             paper/experiments/assets/source_images/annealing_bifurcation.png
             paper/experiments/assets/source_images/lac_multiseed_validation.png
             paper/experiments/assets/source_images/sne_density_scaling.png
             paper/experiments/assets/source_images/sne_neighbor_response.png
+            paper/experiments/assets/source_images/lac_schottky_validation.png
+            paper/experiments/assets/source_images/lac_selector_baselines.png
+            paper/experiments/assets/source_images/lac_stress_tests.png
+            paper/experiments/assets/source_images/sne_perplexity_validation.png
           )
           for file in "${expected[@]}"; do
             test -s "$file" || { echo "Missing or empty paper asset: $file"; exit 1; }
@@ -162,3 +170,65 @@ jobs:
         with:
           name: manuscript
           path: paper/main.pdf
+
+  materialize-scientific-revision:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/agent/scientific-revision-schottky' && github.actor != 'github-actions[bot]'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout revision branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: agent/scientific-revision-schottky
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.lock
+
+      - name: Install locked environment
+        run: |
+          python -m pip install -r requirements.lock
+          python -m pip install -e . --no-deps
+
+      - name: Refine scientific revision sources
+        run: python paper/experiments/_patch_scientific_revision_sources.py
+
+      - name: Regenerate Schottky diagnostic
+        working-directory: paper/experiments
+        run: python -c "import revision_experiments as r; r.schottky_validation()"
+
+      - name: Patch revision helper
+        run: python scripts/fix_scientific_revision_helper.py
+
+      - name: Apply revision and corrected empirical discussion
+        run: |
+          python scripts/apply_scientific_revision.py
+          python paper/experiments/_patch_materialized_main.py
+
+      - name: Verify synchronized bibliography
+        run: python scripts/sync_bibliography.py --check
+
+      - name: Compile revised manuscript
+        uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b # v4
+        with:
+          root_file: main.tex
+          working_directory: paper
+
+      - name: Commit materialized revision
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/main.tex paper/references.bib references/references.bib \
+            paper/experiments/revision_experiments.py \
+            paper/experiments/README.md paper/experiments/MANIFEST.txt \
+            paper/experiments/assets/lac_schottky_diagnostics.csv \
+            paper/experiments/assets/source_images/lac_schottky_validation.png \
+            paper/figures/lac_schottky_validation.pdf
+          git commit -m "Finalize scientific response revision" || exit 0
+          git push origin HEAD:agent/scientific-revision-schottky
