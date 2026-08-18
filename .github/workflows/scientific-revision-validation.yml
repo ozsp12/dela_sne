@@ -40,6 +40,8 @@ jobs:
         run: python scripts/fix_scientific_revision_helper.py
       - name: Apply scientific manuscript revision
         run: python scripts/apply_scientific_revision.py
+      - name: Patch materialized Schottky discussion
+        run: python paper/experiments/_patch_materialized_main.py
       - name: Verify synchronized bibliography
         run: python scripts/sync_bibliography.py --check
       - name: Compile revised manuscript
