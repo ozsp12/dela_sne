@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   materialize:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout branch
@@ -35,6 +36,7 @@ jobs:
               archive.extractall('.')
           PY
           rm -rf paper_experiment
+          git checkout -- .github/workflows/algorithms.yml
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -48,15 +50,14 @@ jobs:
         run: |
           python -m py_compile paper/experiments/run_experiments.py
           python paper/experiments/run_experiments.py
+          rm -rf paper/experiments/__pycache__
 
-      - name: Commit final refactor and remove bootstrap files
+      - name: Commit materialized paper tree
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git rm -r --ignore-unmatch paper_experiment
           git rm -r --ignore-unmatch .bootstrap
-          git rm --ignore-unmatch .github/workflows/bootstrap-paper-refactor.yml
-          git add README.md .github/workflows/algorithms.yml paper
-          git add -A
+          git add README.md paper
           git commit -m "Make paper workflow self-contained"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "HEAD:agent/self-contained-paper-refactor"
