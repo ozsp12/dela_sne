@@ -15,6 +15,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -64,6 +67,9 @@ jobs:
 
       - name: Compile manuscript
         uses: xu-cheng/latex-action@v4
+        env:
+          SOURCE_DATE_EPOCH: "946684800"
+          FORCE_SOURCE_DATE: "1"
         with:
           root_file: main.tex
           working_directory: paper
@@ -72,8 +78,11 @@ jobs:
         run: test -s paper/main.pdf
 
       - name: Commit compiled manuscript PDF
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
+        shell: bash
         run: |
+          set -euo pipefail
+          target_branch="${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add paper/main.pdf
@@ -81,7 +90,7 @@ jobs:
             echo "paper/main.pdf is already up to date."
           else
             git commit -m "Update compiled manuscript PDF"
-            git push origin HEAD:main
+            git push origin "HEAD:${target_branch}"
           fi
 
       - name: Upload algorithm result datasets
