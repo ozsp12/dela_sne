@@ -8,11 +8,15 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: scientific-revision-materialization
+  cancel-in-progress: true
+
 jobs:
   validate:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -29,8 +33,9 @@ jobs:
           python -m pip install -e . --no-deps
       - name: Refine scientific revision sources
         run: python paper/experiments/_patch_scientific_revision_sources.py
-      - name: Run full paper experiment suite
-        run: python paper/experiments/run_experiments.py
+      - name: Regenerate corrected Schottky diagnostic
+        working-directory: paper/experiments
+        run: python -c "import revision_experiments as r; r.schottky_validation()"
       - name: Patch transient revision helper
         run: python scripts/fix_scientific_revision_helper.py
       - name: Apply scientific manuscript revision
@@ -49,20 +54,13 @@ jobs:
           git add paper/main.tex paper/references.bib references/references.bib \
             paper/experiments/revision_experiments.py \
             paper/experiments/README.md paper/experiments/MANIFEST.txt \
-            paper/experiments/assets paper/figures
-          git commit -m "Apply scientific response revision" || exit 0
+            paper/experiments/assets/lac_schottky_diagnostics.csv \
+            paper/experiments/assets/source_images/lac_schottky_validation.png \
+            paper/figures/lac_schottky_validation.pdf
+          git commit -m "Refine empirical Schottky response analysis" || exit 0
           git push origin HEAD:agent/scientific-revision-schottky
       - name: Upload revised manuscript
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: revised-manuscript
           path: paper/main.pdf
-      - name: Upload revision CSVs
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: scientific-revision-csv
-          path: |
-            paper/experiments/assets/lac_schottky_diagnostics.csv
-            paper/experiments/assets/lac_unsupervised_baselines.csv
-            paper/experiments/assets/lac_stress_tests.csv
-            paper/experiments/assets/sne_perplexity_validation.csv
