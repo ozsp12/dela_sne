@@ -1,31 +1,31 @@
-"""Joint reproducible workflow for the LAC and t-SNE reference implementations."""
+"""Joint reproducible workflow for the canonical LAC and t-SNE package."""
 
 from __future__ import annotations
 
 import argparse
 import csv
-from datetime import datetime
 from pathlib import Path
 import sys
 
 import numpy as np
 
-from lac.lac import LAC
-from tsne.tsne import TSNE
-
+from dela_sne import LAC, TSNE
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_TEST_DIR = ROOT / "data" / "test"
 DEFAULT_RESULT_DIR = ROOT / "data" / "result"
 
 
-def _read_csv(path: Path) -> tuple[list[dict[str, str]], list[str], np.ndarray]:
+def read_csv(path: Path) -> tuple[list[dict[str, str]], list[str], np.ndarray]:
     with path.open("r", encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
         if not reader.fieldnames:
             raise ValueError(f"{path} has no header.")
         rows = list(reader)
         fieldnames = list(reader.fieldnames)
+
+    if not rows:
+        raise ValueError(f"{path} contains no observations.")
 
     feature_names = [name for name in fieldnames if name.startswith("feature_")]
     if not feature_names:
@@ -46,24 +46,20 @@ def _read_csv(path: Path) -> tuple[list[dict[str, str]], list[str], np.ndarray]:
     return rows, feature_names, X
 
 
-def _standardize(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def standardize(X: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     mean = np.mean(X, axis=0)
     scale = np.std(X, axis=0)
     scale = np.where(scale > 0.0, scale, 1.0)
     return (X - mean) / scale, mean, scale
 
 
-def _write_result(
+def write_result(
     source_rows: list[dict[str, str]],
     lac: LAC,
     embedding: np.ndarray,
     output_path: Path,
 ) -> None:
-    """Write observation-level outputs.
-
-    LAC feature weights are cluster-level parameters and remain available through
-    ``LAC.feature_weights_`` rather than being duplicated on every CSV row.
-    """
+    """Write observation-level outputs to a stable result file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     original_fields = list(source_rows[0].keys())
     result_fields = original_fields + ["lac_cluster", "lac_distance"] + [
@@ -73,7 +69,6 @@ def _write_result(
     with output_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=result_fields)
         writer.writeheader()
-
         for index, source in enumerate(source_rows):
             result = dict(source)
             result["lac_cluster"] = int(lac.labels_[index])
@@ -86,18 +81,19 @@ def _write_result(
 def run_dataset(
     input_path: Path,
     output_dir: Path = DEFAULT_RESULT_DIR,
-    date_stamp: str | None = None,
     n_clusters: int = 3,
     h: float = 0.5,
     perplexity: float = 30.0,
     random_state: int = 42,
+    n_init: int = 10,
 ) -> Path:
-    rows, _, X = _read_csv(input_path)
-    X_scaled, _, _ = _standardize(X)
+    rows, _, X = read_csv(input_path)
+    X_scaled, _, _ = standardize(X)
 
     lac = LAC(
         n_clusters=n_clusters,
         h=h,
+        n_init=n_init,
         random_state=random_state,
     ).fit(X_scaled)
 
@@ -110,19 +106,18 @@ def run_dataset(
     )
     embedding = tsne.fit_transform(X_scaled)
 
-    stamp = date_stamp or datetime.now().strftime("%Y%m%d")
-    output_path = output_dir / f"{input_path.stem}_result_{stamp}.csv"
-    _write_result(rows, lac, embedding, output_path)
+    output_path = output_dir / f"{input_path.stem}_result.csv"
+    write_result(rows, lac, embedding, output_path)
 
     print(
         f"{input_path.name} -> {output_path.name} | "
-        f"LAC iterations={lac.n_iter_}, "
-        f"t-SNE KL={tsne.kl_divergence_:.6f}"
+        f"LAC objective={lac.objective_:.6f}, status={lac.status_}, "
+        f"t-SNE KL={tsne.kl_divergence_:.6f}, status={tsne.status_}"
     )
     return output_path
 
 
-def _resolve_inputs(values: list[str] | None) -> list[Path]:
+def resolve_inputs(values: list[str] | None) -> list[Path]:
     if values:
         return [Path(value).resolve() for value in values]
     return sorted(DEFAULT_TEST_DIR.glob("*.csv"))
@@ -130,7 +125,7 @@ def _resolve_inputs(values: list[str] | None) -> list[Path]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Run LAC and t-SNE over one or more test CSV datasets."
+        description="Run canonical LAC and t-SNE over one or more test CSV datasets."
     )
     parser.add_argument(
         "inputs",
@@ -141,10 +136,10 @@ def main() -> int:
     parser.add_argument("--h", type=float, default=0.5)
     parser.add_argument("--perplexity", type=float, default=30.0)
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--date", default=None, help="Optional YYYYMMDD output stamp.")
+    parser.add_argument("--n-init", type=int, default=10)
     args = parser.parse_args()
 
-    inputs = _resolve_inputs(args.inputs)
+    inputs = resolve_inputs(args.inputs)
     if not inputs:
         print("No CSV test datasets found.", file=sys.stderr)
         return 2
@@ -152,11 +147,11 @@ def main() -> int:
     for input_path in inputs:
         run_dataset(
             input_path=input_path,
-            date_stamp=args.date,
             n_clusters=args.clusters,
             h=args.h,
             perplexity=args.perplexity,
             random_state=args.seed,
+            n_init=args.n_init,
         )
     return 0
 
