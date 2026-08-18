@@ -29,6 +29,8 @@ jobs:
           python -m pip install -e . --no-deps
       - name: Run full paper experiment suite
         run: python paper/experiments/run_experiments.py
+      - name: Patch transient revision helper
+        run: python scripts/fix_scientific_revision_helper.py
       - name: Apply scientific manuscript revision
         run: python scripts/apply_scientific_revision.py
       - name: Verify synchronized bibliography
