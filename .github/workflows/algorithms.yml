@@ -130,10 +130,18 @@ jobs:
             paper/figures/lac_multiseed_validation.pdf
             paper/figures/sne_density_scaling.pdf
             paper/figures/sne_neighbor_response.pdf
+            paper/figures/lac_schottky_validation.pdf
+            paper/figures/lac_selector_baselines.pdf
+            paper/figures/lac_stress_tests.pdf
+            paper/figures/sne_perplexity_validation.pdf
             paper/experiments/assets/source_images/annealing_bifurcation.png
             paper/experiments/assets/source_images/lac_multiseed_validation.png
             paper/experiments/assets/source_images/sne_density_scaling.png
             paper/experiments/assets/source_images/sne_neighbor_response.png
+            paper/experiments/assets/source_images/lac_schottky_validation.png
+            paper/experiments/assets/source_images/lac_selector_baselines.png
+            paper/experiments/assets/source_images/lac_stress_tests.png
+            paper/experiments/assets/source_images/sne_perplexity_validation.png
           )
           for file in "${expected[@]}"; do
             test -s "$file" || { echo "Missing or empty paper asset: $file"; exit 1; }
