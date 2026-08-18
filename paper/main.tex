@@ -77,6 +77,7 @@ The entropy-regularized feature weights of Locally Adaptive Clustering (LAC) def
 
 \noindent\textbf{Keywords:} statistical mechanics; Gibbs distribution; Shannon entropy; clustering; locally adaptive clustering; stochastic neighbor embedding; t-SNE; perplexity; dimensionality reduction; local metric learning.
 
+\clearpage
 \section*{Glossary}
 
 \begin{longtable}{>{\raggedright\arraybackslash}p{0.22\textwidth} >{\raggedright\arraybackslash}p{0.72\textwidth}}
@@ -1054,7 +1055,7 @@ This expression should not be called the Helmholtz free energy of $Q$, because t
 
 Early exaggeration provides a related but distinct control parameter. Multiplying the high-dimensional affinities in the attractive contribution by $\alpha>1$ changes the relative strength of attraction and repulsion rather than uniformly changing the temperature of a normalized target law. The rigorous early-exaggeration regime analyzed by Linderman and Steinerberger, Ref.\,\cite{linderman2019provably}, and the attraction--repulsion analysis of B\"ohm, Berens, and Kobak, Ref.\,\cite{bohm2022spectrum}, provide the appropriate interpretation. We therefore regard $\alpha$ as an attraction-strength or coupling parameter with an inverse-temperature-like role in the force decomposition, not as a thermodynamic temperature.
 
-\section{State-space comparison and interpretation}
+\section{Feature and neighbor ensembles and the dual construction}
 \label{sec:unified}
 
 The preceding sections should now be read with the priority established in Sec.\,\ref{sec:related}. Gibbs normalization is a classical construction, deterministic annealing already applies free-energy minimization to clustering, and an arbitrary positive kernel can be represented by a suitable logarithmic energy. The useful comparison is therefore the choice of state variable and the response of its finite energy spectrum. Before introducing a summary table, it is useful to recover the two concrete data representations already established. Tab.\,\ref{tab:dataset_notation} displays the original dataset with observations as rows and features as columns. Tab.\,\ref{tab:lac_feature_space} then promotes the feature index to the state variable of the LAC weight ensemble. In SNE, by contrast, the admissible states for a fixed anchor $i$ are other observation indices $j\in\mathcal N_i$. These are different probability spaces constructed from the same data matrix.
@@ -1104,7 +1105,6 @@ t-SNE map & Embedded pair $(i,j)$ & Logarithmic or generalized Student pair ener
 
 The empirical interpretations follow from these different state spaces. In the LAC weight subproblem, small dispersion means low feature-state energy, so the exponential weighting suppresses locally noisy coordinates; this mechanism is already implicit in the original objective of Domeniconi et al., Ref.\,\cite{domeniconi2007lac}. The new response diagnostic in Eq.\,\eqref{eq:lac_response} quantifies how rapidly the expected feature dispersion changes with $h$. In SNE, a common perplexity fixes the same entropy at every anchor but not the same temperature or the same response. Eq.\,\eqref{eq:sne_response} therefore adds a local susceptibility-like diagnostic that is not specified by perplexity alone. For t-SNE, the generalized Student observation is deliberately narrower: after the quadratic pair-energy coordinate is fixed, Eq.\,\eqref{eq:student_beta_eff} defines a conditional distance-dependent inverse scale, while the algebraic tail exponent remains the coordinate-independent characterization inherited from Ref.\,\cite{kobak2020heavy}.
 
-\section{Prospective dual feature--neighbor construction}
 \label{sec:dual}
 
 The state-space comparison suggests a prospective synthesis in which a feature distribution modifies the pair energy used by a neighbor distribution. This construction is retained only to make the mathematical implication explicit; no convergence or performance claim is attached to it. For an anchor $x_i$, let $V_{if}\ge0$ denote a local feature dispersion and let $h_i>0$. The feature probabilities are
