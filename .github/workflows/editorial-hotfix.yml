@@ -1,0 +1,38 @@
+name: editorial-hotfix
+
+on:
+  push:
+    branches: [agent/fix-sne-tolerance-section]
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: agent/fix-sne-tolerance-section
+          fetch-depth: 0
+      - name: Apply editorial hotfix
+        run: python paper/_apply_editorial_hotfix.py
+      - name: Compile hotfixed manuscript
+        uses: xu-cheng/latex-action@6549dc21effb2730855a1281407ecfcececc6c1b
+        with:
+          root_file: main.tex
+          working_directory: paper
+      - name: Commit hotfix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add paper/main.tex
+          git commit -m "Fix SNE tolerance section and conclusion" || exit 0
+          git push origin HEAD:agent/fix-sne-tolerance-section
+      - name: Upload manuscript
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: hotfixed-manuscript
+          path: paper/main.pdf
